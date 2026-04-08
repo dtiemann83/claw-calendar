@@ -18,6 +18,7 @@ export async function GET() {
     name: c.name,
     color: c.color,
     proxyUrl: `/api/connectors/${c.id}`,
+    ...(c.iconRules ? { iconRules: c.iconRules } : {}),
   }))
 
   return Response.json(meta)
