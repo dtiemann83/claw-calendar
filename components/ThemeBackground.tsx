@@ -8,11 +8,13 @@ interface Props {
 }
 
 export function ThemeBackground({ theme }: Props) {
+  const hasImages = theme.backgrounds.length > 0
   const [current, setCurrent] = useState(0)
   const [next, setNext] = useState(1)
   const [transitioning, setTransitioning] = useState(false)
 
   useEffect(() => {
+    if (!hasImages) return
     const interval = setInterval(() => {
       setTransitioning(true)
       setTimeout(() => {
@@ -21,9 +23,8 @@ export function ThemeBackground({ theme }: Props) {
         setTransitioning(false)
       }, 1500)
     }, theme.cycleIntervalMs)
-
     return () => clearInterval(interval)
-  }, [theme])
+  }, [theme, hasImages])
 
   const base: React.CSSProperties = {
     position: "fixed",
@@ -36,23 +37,37 @@ export function ThemeBackground({ theme }: Props) {
 
   return (
     <>
-      {/* Current image — fades out during transition */}
+      {/* Fallback — always present behind everything, visible when images are absent or loading */}
       <div
         style={{
           ...base,
-          backgroundImage: `url(${theme.backgrounds[current]})`,
-          opacity: transitioning ? 0 : 1,
+          background: theme.fallbackBackground,
+          zIndex: -3,
+          transition: "none",
         }}
       />
-      {/* Next image — always underneath, becomes visible as current fades */}
-      <div
-        style={{
-          ...base,
-          backgroundImage: `url(${theme.backgrounds[next]})`,
-          opacity: 1,
-          zIndex: -2,
-        }}
-      />
+
+      {hasImages && (
+        <>
+          {/* Current image — fades out during transition */}
+          <div
+            style={{
+              ...base,
+              backgroundImage: `url(${theme.backgrounds[current]})`,
+              opacity: transitioning ? 0 : 1,
+            }}
+          />
+          {/* Next image — always underneath, becomes visible as current fades */}
+          <div
+            style={{
+              ...base,
+              backgroundImage: `url(${theme.backgrounds[next]})`,
+              opacity: 1,
+              zIndex: -2,
+            }}
+          />
+        </>
+      )}
     </>
   )
 }
