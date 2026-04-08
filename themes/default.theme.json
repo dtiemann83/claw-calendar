@@ -1,0 +1,23 @@
+{
+  "name": "default",
+  "backgrounds": [],
+  "fallbackBackground": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+  "cycleIntervalMs": 30000,
+  "calendar": {
+    "cellBg": "transparent",
+    "cellBorder": "rgba(255, 255, 255, 0.15)",
+    "textColor": "#ffffff",
+    "todayBg": "rgba(255, 255, 255, 0.12)",
+    "headerBg": "rgba(0, 0, 0, 0.35)",
+    "eventBg": "rgba(59, 130, 246, 0.85)",
+    "eventBorder": "rgba(96, 165, 250, 0.9)",
+    "drawerBg": "rgba(15, 23, 42, 0.92)",
+    "drawerBorder": "rgba(255, 255, 255, 0.12)",
+    "toolbarButtonBg": "rgba(255, 255, 255, 0.15)",
+    "toolbarButtonBorder": "rgba(255, 255, 255, 0.25)"
+  },
+  "icons": {
+    "set": "lucide",
+    "overrides": {}
+  }
+}

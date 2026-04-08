@@ -1,0 +1,13 @@
+{
+  "name": "yosemite",
+  "backgrounds": [
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Tunnel_View,_Yosemite_Valley,_Yosemite_NP_-_Diliff.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Half_Dome_from_Glacier_Point,_Yosemite_NP_-_Diliff.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Yosemite_Falls_from_trail,_Yosemite_NP,_CA,_US_-_Diliff.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Cathedral_Peak_and_Lake_in_Yosemite.jpg"
+  ],
+  "calendar": {
+    "eventBg": "rgba(30, 100, 200, 0.85)",
+    "eventBorder": "rgba(100, 160, 255, 0.9)"
+  }
+}
