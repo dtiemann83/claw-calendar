@@ -8,8 +8,7 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list"
 import iCalendarPlugin from "@fullcalendar/icalendar"
 import interactionPlugin from "@fullcalendar/interaction"
-import type { DateClickArg } from "@fullcalendar/interaction"
-import type { EventApi, EventClickArg, EventContentArg, DatesSetArg } from "@fullcalendar/core"
+import type { EventApi, EventClickArg, EventContentArg, DatesSetArg, DayHeaderContentArg } from "@fullcalendar/core"
 import type { CalendarTheme } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveEventIcon } from "@/lib/events/icons"
@@ -18,16 +17,33 @@ import { EventDrawer } from "./EventDrawer"
 
 interface Props {
   theme: CalendarTheme
+  hiddenConnectorIds?: Set<string>
+  onOpenSettings?: () => void
+  onConnectorsLoaded?: (connectors: ConnectorMeta[]) => void
+  idleResetMs?: number
 }
 
-export function Calendar({ theme }: Props) {
+const FADE_MS = 160
+
+export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnectorsLoaded, idleResetMs }: Props) {
   const { calendar: c } = theme
   const [connectors, setConnectors] = useState<ConnectorMeta[]>([])
   const [eventSources, setEventSources] = useState<object[]>([])
   const [selectedEvent, setSelectedEvent] = useState<EventApi | null>(null)
   const [calendarTitle, setCalendarTitle] = useState("")
   const [currentView, setCurrentView] = useState("dayGridMonth")
+  const [viewOpacity, setViewOpacity] = useState(1)
   const calendarRef = useRef<FullCalendar>(null)
+
+  // Wrap any navigation action in a fade-out → act → fade-in sequence
+  const navigate = useCallback((action: () => void) => {
+    setViewOpacity(0)
+    setTimeout(() => {
+      action()
+      // Double rAF: wait for FullCalendar to paint new content before fading in
+      requestAnimationFrame(() => requestAnimationFrame(() => setViewOpacity(1)))
+    }, FADE_MS)
+  }, [])
 
   // Load connector list once on mount
   useEffect(() => {
@@ -38,6 +54,7 @@ export function Calendar({ theme }: Props) {
       })
       .then((data) => {
         setConnectors(data)
+        onConnectorsLoaded?.(data)
         setEventSources(
           data.map((conn) => ({
             id: conn.id,
@@ -75,11 +92,34 @@ export function Calendar({ theme }: Props) {
     return () => es.close()
   }, [])
 
-  const handleDateClick = useCallback((arg: DateClickArg) => {
-    const api = calendarRef.current?.getApi()
-    if (!api) return
-    api.changeView("timeGridDay", arg.date)
-  }, [])
+  // Idle view reset — navigate back to month view after inactivity
+  useEffect(() => {
+    if (!idleResetMs) return
+    let timer: ReturnType<typeof setTimeout>
+    const reset = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        const api = calendarRef.current?.getApi()
+        if (api) {
+          navigate(() => {
+            api.changeView("dayGridMonth")
+            api.today()
+          })
+        }
+      }, idleResetMs)
+    }
+    const events = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"] as const
+    events.forEach((e) => document.addEventListener(e, reset, { passive: true }))
+    reset()
+    return () => {
+      clearTimeout(timer)
+      events.forEach((e) => document.removeEventListener(e, reset))
+    }
+  }, [idleResetMs, navigate])
+
+  const handleNavLinkDayClick = useCallback((date: Date) => {
+    navigate(() => calendarRef.current?.getApi().changeView("timeGridDay", date))
+  }, [navigate])
 
   const handleEventClick = useCallback((arg: EventClickArg) => {
     arg.jsEvent.preventDefault()
@@ -90,6 +130,44 @@ export function Calendar({ theme }: Props) {
     setCalendarTitle(arg.view.title)
     setCurrentView(arg.view.type)
   }, [])
+
+  const renderDayHeader = useCallback((arg: DayHeaderContentArg) => {
+    if (!arg.view.type.startsWith("timeGrid")) return true
+    const dayAbbr = arg.date.toLocaleDateString([], { weekday: "short" }).toUpperCase()
+    const dayNum  = arg.date.getDate()
+    const isDay   = arg.view.type === "timeGridDay"
+    const canNav  = !isDay
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 0", gap: 3 }}>
+        <span style={{
+          fontSize: "0.6rem",
+          fontWeight: 700,
+          letterSpacing: "0.1em",
+          opacity: arg.isToday ? 0.9 : 0.45,
+        }}>
+          {isDay ? arg.date.toLocaleDateString([], { weekday: "long" }).toUpperCase() : dayAbbr}
+        </span>
+        <span
+          onClick={canNav ? () => navigate(() => calendarRef.current?.getApi().changeView("timeGridDay", arg.date)) : undefined}
+          style={{
+            fontSize: isDay ? "1.6rem" : "1.25rem",
+            fontWeight: 700,
+            lineHeight: 1,
+            width: "2rem",
+            height: "2rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "50%",
+            background: arg.isToday ? "rgba(255,255,255,0.22)" : "transparent",
+            cursor: canNav ? "pointer" : "default",
+          }}
+        >
+          {dayNum}
+        </span>
+      </div>
+    )
+  }, [navigate])
 
   const renderEventContent = useCallback(
     (arg: EventContentArg) => {
@@ -124,6 +202,7 @@ export function Calendar({ theme }: Props) {
           "--fc-event-bg-color": c.eventBg,
           "--fc-event-border-color": c.eventBorder,
           "--fc-event-text-color": "#fff",
+          "--fc-now-indicator-color": "rgba(255,255,255,0.85)",
           color: c.textColor,
         } as React.CSSProperties
       }
@@ -133,30 +212,44 @@ export function Calendar({ theme }: Props) {
         title={calendarTitle}
         currentView={currentView}
         theme={theme}
-        onPrev={() => calendarRef.current?.getApi().prev()}
-        onNext={() => calendarRef.current?.getApi().next()}
-        onToday={() => calendarRef.current?.getApi().today()}
-        onChangeView={(view) => calendarRef.current?.getApi().changeView(view)}
+        onPrev={() => navigate(() => calendarRef.current?.getApi().prev())}
+        onNext={() => navigate(() => calendarRef.current?.getApi().next())}
+        onToday={() => navigate(() => calendarRef.current?.getApi().today())}
+        onChangeView={(view) => navigate(() => calendarRef.current?.getApi().changeView(view))}
+        onOpenSettings={onOpenSettings ?? (() => {})}
       />
 
-      <FullCalendar
-        ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, iCalendarPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        headerToolbar={false}
-        height="calc(100vh - 60px)"
-        eventSources={eventSources}
-        eventDisplay="block"
-        dateClick={handleDateClick}
-        eventClick={handleEventClick}
-        datesSet={handleDatesSet}
-        eventContent={renderEventContent}
-      />
+      <div style={{
+        opacity: viewOpacity,
+        transition: `opacity ${FADE_MS}ms ease`,
+      }}>
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, timeGridPlugin, listPlugin, iCalendarPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          headerToolbar={false}
+          height="calc(100vh - 60px)"
+          eventSources={
+            hiddenConnectorIds?.size
+              ? eventSources.filter((s: any) => !hiddenConnectorIds.has(s.id))
+              : eventSources
+          }
+          allDayText="Day"
+          eventDisplay="block"
+          navLinks={true}
+          navLinkDayClick={handleNavLinkDayClick}
+          eventClick={handleEventClick}
+          datesSet={handleDatesSet}
+          dayHeaderContent={renderDayHeader}
+          eventContent={renderEventContent}
+        />
+      </div>
 
       <EventDrawer
         event={selectedEvent}
         onClose={() => setSelectedEvent(null)}
         theme={theme}
+        connectors={connectors}
       />
     </div>
   )
