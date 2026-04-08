@@ -46,3 +46,14 @@ export function loadConnectors(): ConnectorConfig[] {
 export function findConnectorById(id: string): ConnectorConfig | undefined {
   return loadConnectors().find((c) => c.id === id)
 }
+
+export function loadFont(): string | undefined {
+  ensureConfigExists()
+  try {
+    const raw = fs.readFileSync(CONFIG_PATH, "utf-8")
+    const parsed = JSON.parse(raw) as { font?: string }
+    return parsed.font
+  } catch {
+    return undefined
+  }
+}

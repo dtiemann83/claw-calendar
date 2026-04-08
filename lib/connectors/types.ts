@@ -27,6 +27,7 @@ export type ConnectorConfig =
 
 export interface CalendarConfig {
   connectors: ConnectorConfig[]
+  font?: string
 }
 
 /** Shape sent to the browser — no internal URLs or file paths */
