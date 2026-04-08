@@ -1,26 +1,123 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── FullCalendar overrides ─────────────────────────────────────────── */
+
+.fc-theme-wrapper {
+  height: 100vh;
+  padding: 12px;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.fc .fc-toolbar {
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px !important;
 }
+
+.fc .fc-toolbar-title {
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+
+.fc .fc-button {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+  backdrop-filter: blur(4px);
+  text-transform: capitalize;
+  transition: background 0.2s;
+}
+
+.fc .fc-button:hover {
+  background: rgba(255, 255, 255, 0.28) !important;
+}
+
+.fc .fc-button-active,
+.fc .fc-button:not(:disabled):active {
+  background: rgba(255, 255, 255, 0.35) !important;
+}
+
+.fc .fc-col-header-cell {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  padding: 6px 4px;
+  text-decoration: none;
+}
+
+.fc .fc-daygrid-day {
+  background: transparent !important;
+}
+
+.fc .fc-daygrid-day-number {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  text-decoration: none;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fc .fc-daygrid-event {
+  border-radius: 4px;
+}
+
+.fc .fc-event-title {
+  font-weight: 500;
+}
+
+.fc .fc-list-sticky .fc-list-day > * {
+  background: rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(6px);
+}
+
+.fc .fc-list-event:hover td {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fc .fc-list-event-title a,
+.fc .fc-list-day-text,
+.fc .fc-list-day-side-text {
+  color: #fff;
+  text-decoration: none;
+}
+
+.fc .fc-timegrid-slot {
+  background: transparent;
+}
+
+.fc .fc-timegrid-axis-cushion,
+.fc .fc-timegrid-slot-label-cushion {
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }

@@ -1,0 +1,12 @@
+{
+  "connectors": [
+    {
+      "id": "family",
+      "name": "Family",
+      "color": "#3b82f6",
+      "type": "agent-api",
+      "baseUrl": "http://localhost:4200",
+      "calendarSlug": "family"
+    }
+  ]
+}
