@@ -7,6 +7,7 @@ import {
   CalendarRange,
   Calendar,
   List,
+  Settings,
   type LucideIcon,
 } from "lucide-react"
 import type { CalendarTheme } from "@/themes/types"
@@ -21,6 +22,7 @@ const LUCIDE_SET: Record<string, LucideIcon> = {
   viewWeek:  CalendarRange,
   viewDay:   Calendar,
   viewList:  List,
+  settings:  Settings,
 }
 
 // Additional icons available as overrides by kebab-case name
@@ -34,6 +36,7 @@ const LUCIDE_ALL: Record<string, LucideIcon> = {
   "calendar-range": CalendarRange,
   "calendar":       Calendar,
   "list":           List,
+  "settings":       Settings,
 }
 
 /**

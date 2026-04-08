@@ -11,6 +11,7 @@ interface Props {
   onNext: () => void
   onToday: () => void
   onChangeView: (view: string) => void
+  onOpenSettings: () => void
 }
 
 const VIEW_BUTTONS = [
@@ -28,6 +29,7 @@ export function CalendarToolbar({
   onNext,
   onToday,
   onChangeView,
+  onOpenSettings,
 }: Props) {
   const { calendar: c } = theme
 
@@ -53,9 +55,10 @@ export function CalendarToolbar({
     borderColor: "rgba(255,255,255,0.5)",
   }
 
-  const PrevIcon  = resolveIcon("prev",  theme)
-  const NextIcon  = resolveIcon("next",  theme)
-  const TodayIcon = resolveIcon("today", theme)
+  const PrevIcon     = resolveIcon("prev",     theme)
+  const NextIcon     = resolveIcon("next",     theme)
+  const TodayIcon    = resolveIcon("today",    theme)
+  const SettingsIcon = resolveIcon("settings", theme)
 
   return (
     <div
@@ -70,13 +73,10 @@ export function CalendarToolbar({
         marginBottom: 8,
       }}
     >
-      {/* Left: navigation */}
+      {/* Left: settings + today */}
       <div style={{ display: "flex", gap: 4 }}>
-        <button style={btnBase} onClick={onPrev} aria-label="Previous">
-          <PrevIcon size={16} />
-        </button>
-        <button style={btnBase} onClick={onNext} aria-label="Next">
-          <NextIcon size={16} />
+        <button style={btnBase} onClick={onOpenSettings} aria-label="Settings">
+          <SettingsIcon size={16} />
         </button>
         <button style={btnBase} onClick={onToday} aria-label="Today">
           <TodayIcon size={16} />
@@ -84,16 +84,26 @@ export function CalendarToolbar({
         </button>
       </div>
 
-      {/* Center: title */}
-      <div
-        style={{
-          color: "#fff",
-          fontSize: "1.4rem",
-          fontWeight: 600,
-          textShadow: "0 1px 4px rgba(0,0,0,0.6)",
-        }}
-      >
-        {title}
+      {/* Center: prev · title · next */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button style={btnBase} onClick={onPrev} aria-label="Previous">
+          <PrevIcon size={16} />
+        </button>
+        <div
+          style={{
+            color: "#fff",
+            fontSize: "1.4rem",
+            fontWeight: 600,
+            textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+            minWidth: "16rem",
+            textAlign: "center",
+          }}
+        >
+          {title}
+        </div>
+        <button style={btnBase} onClick={onNext} aria-label="Next">
+          <NextIcon size={16} />
+        </button>
       </div>
 
       {/* Right: view switcher */}
