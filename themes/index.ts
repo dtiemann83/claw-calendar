@@ -16,6 +16,7 @@ function deepMerge(base: CalendarTheme, override: ThemeInput): CalendarTheme {
     backgrounds: override.backgrounds ?? base.backgrounds,
     fallbackBackground: override.fallbackBackground ?? base.fallbackBackground,
     cycleIntervalMs: override.cycleIntervalMs ?? base.cycleIntervalMs,
+    backgroundOverlay: override.backgroundOverlay ?? base.backgroundOverlay,
     calendar: { ...base.calendar, ...(override.calendar ?? {}) },
     icons: {
       set: override.icons?.set ?? base.icons.set,

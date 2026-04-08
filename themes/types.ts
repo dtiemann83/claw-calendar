@@ -4,6 +4,7 @@ export interface CalendarTheme {
   backgrounds: string[]
   fallbackBackground: string
   cycleIntervalMs: number
+  backgroundOverlay: string
   calendar: {
     cellBg: string
     cellBorder: string
@@ -28,6 +29,7 @@ export type ThemeInput = {
   backgrounds?: string[]
   fallbackBackground?: string
   cycleIntervalMs?: number
+  backgroundOverlay?: string
   calendar?: Partial<CalendarTheme["calendar"]>
   icons?: {
     set?: string

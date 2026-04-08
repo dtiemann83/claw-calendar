@@ -2,7 +2,8 @@
   "name": "default",
   "backgrounds": [],
   "fallbackBackground": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-  "cycleIntervalMs": 30000,
+  "cycleIntervalMs": 3600000,
+  "backgroundOverlay": "rgba(0, 0, 0, 0.45)",
   "calendar": {
     "cellBg": "transparent",
     "cellBorder": "rgba(255, 255, 255, 0.15)",
