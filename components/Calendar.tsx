@@ -1,3 +1,4 @@
+// components/Calendar.tsx
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
@@ -8,9 +9,11 @@ import listPlugin from "@fullcalendar/list"
 import iCalendarPlugin from "@fullcalendar/icalendar"
 import interactionPlugin from "@fullcalendar/interaction"
 import type { DateClickArg } from "@fullcalendar/interaction"
-import type { EventClickArg, EventApi } from "@fullcalendar/core"
+import type { EventApi, EventClickArg, EventContentArg, DatesSetArg } from "@fullcalendar/core"
 import type { CalendarTheme } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
+import { resolveEventIcon } from "@/lib/events/icons"
+import { CalendarToolbar } from "./CalendarToolbar"
 import { EventDrawer } from "./EventDrawer"
 
 interface Props {
@@ -19,8 +22,11 @@ interface Props {
 
 export function Calendar({ theme }: Props) {
   const { calendar: c } = theme
+  const [connectors, setConnectors] = useState<ConnectorMeta[]>([])
   const [eventSources, setEventSources] = useState<object[]>([])
   const [selectedEvent, setSelectedEvent] = useState<EventApi | null>(null)
+  const [calendarTitle, setCalendarTitle] = useState("")
+  const [currentView, setCurrentView] = useState("dayGridMonth")
   const calendarRef = useRef<FullCalendar>(null)
 
   // Load connector list once on mount
@@ -30,9 +36,11 @@ export function Calendar({ theme }: Props) {
         if (!res.ok) throw new Error(`/api/connectors returned ${res.status}`)
         return res.json() as Promise<ConnectorMeta[]>
       })
-      .then((connectors) => {
+      .then((data) => {
+        setConnectors(data)
         setEventSources(
-          connectors.map((conn) => ({
+          data.map((conn) => ({
+            id: conn.id,
             url: conn.proxyUrl,
             format: "ics",
             backgroundColor: conn.color,
@@ -61,7 +69,6 @@ export function Calendar({ theme }: Props) {
     }
 
     es.onerror = () => {
-      // EventSource will automatically reconnect on error
       console.warn("[calendar] SSE connection lost, will reconnect automatically")
     }
 
@@ -78,6 +85,32 @@ export function Calendar({ theme }: Props) {
     arg.jsEvent.preventDefault()
     setSelectedEvent(arg.event)
   }, [])
+
+  const handleDatesSet = useCallback((arg: DatesSetArg) => {
+    setCalendarTitle(arg.view.title)
+    setCurrentView(arg.view.type)
+  }, [])
+
+  const renderEventContent = useCallback(
+    (arg: EventContentArg) => {
+      const icon = resolveEventIcon(arg.event, connectors)
+      if (!icon) return true // use FullCalendar's default rendering
+      return (
+        <div
+          style={{
+            overflow: "hidden",
+            padding: "0 2px",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+          }}
+        >
+          <span style={{ marginRight: "0.2em" }}>{icon}</span>
+          <span style={{ fontWeight: 500 }}>{arg.event.title}</span>
+        </div>
+      )
+    },
+    [connectors]
+  )
 
   return (
     <div
@@ -96,23 +129,35 @@ export function Calendar({ theme }: Props) {
       }
       className="fc-theme-wrapper"
     >
+      <CalendarToolbar
+        title={calendarTitle}
+        currentView={currentView}
+        theme={theme}
+        onPrev={() => calendarRef.current?.getApi().prev()}
+        onNext={() => calendarRef.current?.getApi().next()}
+        onToday={() => calendarRef.current?.getApi().today()}
+        onChangeView={(view) => calendarRef.current?.getApi().changeView(view)}
+      />
+
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, iCalendarPlugin, interactionPlugin]}
         initialView="dayGridMonth"
-        height="100vh"
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay,listMonth",
-        }}
+        headerToolbar={false}
+        height="calc(100vh - 60px)"
         eventSources={eventSources}
         eventDisplay="block"
         dateClick={handleDateClick}
         eventClick={handleEventClick}
+        datesSet={handleDatesSet}
+        eventContent={renderEventContent}
       />
 
-      <EventDrawer event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+      <EventDrawer
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        theme={theme}
+      />
     </div>
   )
 }
