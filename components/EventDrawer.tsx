@@ -12,12 +12,14 @@ import {
 } from "@chakra-ui/react"
 import type { EventApi } from "@fullcalendar/core"
 import type { CalendarTheme } from "@/themes/types"
+import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveIcon } from "@/lib/icons"
 
 interface Props {
   event: EventApi | null
   onClose: () => void
   theme: CalendarTheme
+  connectors: ConnectorMeta[]
 }
 
 function formatDateTime(date: Date | null, allDay: boolean): string {
@@ -40,9 +42,10 @@ function formatDateTime(date: Date | null, allDay: boolean): string {
   })
 }
 
-export function EventDrawer({ event, onClose, theme }: Props) {
+export function EventDrawer({ event, onClose, theme, connectors }: Props) {
   const { calendar: c } = theme
   const CloseIcon = resolveIcon("close", theme)
+  const connector = connectors.find((conn) => conn.id === event?.source?.id)
 
   return (
     <DrawerRoot
@@ -104,11 +107,11 @@ export function EventDrawer({ event, onClose, theme }: Props) {
                           width: 12,
                           height: 12,
                           borderRadius: "50%",
-                          background: event.backgroundColor || "#60a5fa",
+                          background: connector?.color || event.backgroundColor || "#60a5fa",
                           flexShrink: 0,
                         }}
                       />
-                      {"Calendar"}
+                      {connector?.name ?? event.source?.id ?? "Unknown"}
                     </span>
                   }
                 />
