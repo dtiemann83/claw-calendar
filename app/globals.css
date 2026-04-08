@@ -2,11 +2,18 @@
   box-sizing: border-box;
 }
 
-html, body {
+html {
   margin: 0;
   padding: 0;
   height: 100%;
   background: #000;
+  font-family: var(--font-family), sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
   font-family: var(--font-family), sans-serif;
 }
 
@@ -23,7 +30,9 @@ html, body {
 }
 
 
-.fc .fc-col-header-cell {
+.fc .fc-col-header-cell,
+.fc .fc-timegrid-axis,
+.fc .fc-timegrid-slot-label {
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(4px);
 }
@@ -81,14 +90,140 @@ html, body {
   text-decoration: none;
 }
 
+/* ── Time grid (week / day) ─────────────────────────────────────────── */
+
+/* Slot rows */
 .fc .fc-timegrid-slot {
   background: transparent;
+  height: 2.8rem;
+}
+
+/* Major (on-the-hour) lines: barely-there */
+.fc .fc-timegrid-slot-lane {
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+/* Minor (30-min) lines: dashed, even fainter */
+.fc .fc-timegrid-slot-lane.fc-timegrid-slot-minor {
+  border-top: 1px dashed rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Time axis labels */
+.fc .fc-timegrid-slot-label {
+  border-top: none !important;
+  vertical-align: top;
 }
 
 .fc .fc-timegrid-axis-cushion,
 .fc .fc-timegrid-slot-label-cushion {
-  color: rgba(255, 255, 255, 0.7);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 8px 0 0;
+  color: rgba(255, 255, 255, 0.35);
+  text-shadow: none;
+}
+
+/* Hide 30-min labels — keep axis clean */
+.fc .fc-timegrid-slot-minor .fc-timegrid-slot-label-cushion {
+  visibility: hidden;
+}
+
+/* Today's column — whisper-light highlight */
+.fc-timegrid .fc-day-today {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Now indicator — white glowing line instead of red */
+.fc .fc-timegrid-now-indicator-line {
+  border-color: rgba(255, 255, 255, 0.85);
+  border-top-width: 2px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5), 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  border-left-color: rgba(255, 255, 255, 0.85);
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  margin-top: -5px;
+}
+
+/* Events in time grid */
+.fc .fc-timegrid-event {
+  border-radius: 5px !important;
+  border-left-width: 3px !important;
+  border-top-width: 0 !important;
+  border-right-width: 0 !important;
+  border-bottom-width: 0 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.fc .fc-timegrid-event .fc-event-main {
+  padding: 4px 7px;
+}
+
+.fc .fc-timegrid-event .fc-event-time {
+  font-size: 0.68rem;
+  font-weight: 600;
+  opacity: 0.75;
+  margin-bottom: 1px;
+}
+
+.fc .fc-timegrid-event .fc-event-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* Divider between all-day and time grid */
+.fc .fc-timegrid-divider {
+  padding: 0;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Scroller backgrounds */
+.fc .fc-timegrid-body,
+.fc .fc-scroller {
+  background: transparent !important;
+}
+
+
+/* Settings range slider */
+input[type="range"].claw-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.18);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"].claw-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+
+input[type="range"].claw-range::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+}
+
+input[type="range"].claw-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
 }
 
 ::-webkit-scrollbar { width: 6px; }
