@@ -1,13 +1,17 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list"
 import iCalendarPlugin from "@fullcalendar/icalendar"
+import interactionPlugin from "@fullcalendar/interaction"
+import type { DateClickArg } from "@fullcalendar/interaction"
+import type { EventClickArg, EventApi } from "@fullcalendar/core"
 import type { CalendarTheme } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
+import { EventDrawer } from "./EventDrawer"
 
 interface Props {
   theme: CalendarTheme
@@ -16,6 +20,7 @@ interface Props {
 export function Calendar({ theme }: Props) {
   const { calendar: c } = theme
   const [eventSources, setEventSources] = useState<object[]>([])
+  const [selectedEvent, setSelectedEvent] = useState<EventApi | null>(null)
   const calendarRef = useRef<FullCalendar>(null)
 
   // Load connector list once on mount
@@ -63,6 +68,17 @@ export function Calendar({ theme }: Props) {
     return () => es.close()
   }, [])
 
+  const handleDateClick = useCallback((arg: DateClickArg) => {
+    const api = calendarRef.current?.getApi()
+    if (!api) return
+    api.changeView("timeGridDay", arg.date)
+  }, [])
+
+  const handleEventClick = useCallback((arg: EventClickArg) => {
+    arg.jsEvent.preventDefault()
+    setSelectedEvent(arg.event)
+  }, [])
+
   return (
     <div
       style={
@@ -82,7 +98,7 @@ export function Calendar({ theme }: Props) {
     >
       <FullCalendar
         ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, iCalendarPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, iCalendarPlugin, interactionPlugin]}
         initialView="dayGridMonth"
         height="100vh"
         headerToolbar={{
@@ -92,7 +108,11 @@ export function Calendar({ theme }: Props) {
         }}
         eventSources={eventSources}
         eventDisplay="block"
+        dateClick={handleDateClick}
+        eventClick={handleEventClick}
       />
+
+      <EventDrawer event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   )
 }

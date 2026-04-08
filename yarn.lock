@@ -441,6 +441,36 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.2.11.tgz#a269e055e40e2f45873bae9d1a2fdccbd314ea3f"
   integrity sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==
 
+"@fontsource-variable/geist@^5.2.8":
+  version "5.2.8"
+  resolved "https://registry.yarnpkg.com/@fontsource-variable/geist/-/geist-5.2.8.tgz#7fe7b74934b5d680150ba5664ea147603d5a7c0c"
+  integrity sha512-cJ6m9e+8MQ5dCYJsLylfZrgBh6KkG4bOLckB35Tr9J/EqdkEM6QllH5PxqP1dhTvFup+HtMRPuz9xOjxXJggxw==
+
+"@fontsource-variable/noto-sans@^5.2.10":
+  version "5.2.10"
+  resolved "https://registry.yarnpkg.com/@fontsource-variable/noto-sans/-/noto-sans-5.2.10.tgz#1ec8a418314435237256c786e32109e5bc21b13f"
+  integrity sha512-wyFgKkFu7jki5kEL8qv7avjQ8rxHX0J/nhLWvbR9T0hOH1HRKZEvb9EW9lMjZfWHHfEzKkYf5J+NadwgCS7TXA==
+
+"@fontsource-variable/noto-serif@^5.2.9":
+  version "5.2.9"
+  resolved "https://registry.yarnpkg.com/@fontsource-variable/noto-serif/-/noto-serif-5.2.9.tgz#5947f3c09ebe9cf74b98baa21f8a6f041afa5d99"
+  integrity sha512-9McZzWeOjD/Gsko+w6A2lpGlHXZw5J2JmxaSMgopiIHoMYI1m6DAyFrzG9QQ0WjdWxj5jZfKM0EGSBVZHC6+nw==
+
+"@fontsource-variable/nunito@^5.2.7":
+  version "5.2.7"
+  resolved "https://registry.yarnpkg.com/@fontsource-variable/nunito/-/nunito-5.2.7.tgz#9b21e574bf4a3060e60b06e0a10fb90edd86984c"
+  integrity sha512-2N8QhatkyKgSUbAGZO2FYLioxA32+RyI1EplVLawbpkGjUeui9Qg9VMrpkCaik1ydjFjfLV+kzQ0cGEsMrMenQ==
+
+"@fontsource/arvo@^5.2.7":
+  version "5.2.7"
+  resolved "https://registry.yarnpkg.com/@fontsource/arvo/-/arvo-5.2.7.tgz#846f6aa6bab611c4ca11c27993c7da2148a67af4"
+  integrity sha512-CqxrDBkwj8av+R/aH9C5gg/4GAvWUiZLj1Y9z3En1njXaDqV7njZt5qrQV4lhTOLe270PE5jdjKXozecKXiUbA==
+
+"@fontsource/lato@^5.2.7":
+  version "5.2.7"
+  resolved "https://registry.yarnpkg.com/@fontsource/lato/-/lato-5.2.7.tgz#665b6076908b85abc26a9db5d0f34451bdb6a2d6"
+  integrity sha512-k5mum1ADbDW5cTw1Ett1eQVWeoZ6gq0ct6SFBibEhB4LRxhniChJZTBgd6ph5yBxLkN1fcnsnmicBNA4S/3nbw==
+
 "@fullcalendar/core@^6.1.20":
   version "6.1.20"
   resolved "https://registry.yarnpkg.com/@fullcalendar/core/-/core-6.1.20.tgz#e4cfa767a9b8b7dad015b33fcb8acb0fac986a85"
@@ -457,6 +487,11 @@
   version "6.1.20"
   resolved "https://registry.yarnpkg.com/@fullcalendar/icalendar/-/icalendar-6.1.20.tgz#47caa2202f7d42977ff80aa41b7935bbfe8ef1fc"
   integrity sha512-AwxnEGYrv18ulQQ8Eo+VLCKmvY0dpn3CmS1ryV8mMnX50QaE6yQ4/w5mVIGWkKsa5alRnFM7HOa2UNIP6UKj2A==
+
+"@fullcalendar/interaction@^6.1.20":
+  version "6.1.20"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/interaction/-/interaction-6.1.20.tgz#a73a53af5f93ac261f864b025ae80201609f1cd7"
+  integrity sha512-p6txmc5txL0bMiPaJxe2ip6o0T384TyoD2KGdsU6UjZ5yoBlaY+dg7kxfnYKpYMzEJLG58n+URrHr2PgNL2fyA==
 
 "@fullcalendar/list@^6.1.20":
   version "6.1.20"
