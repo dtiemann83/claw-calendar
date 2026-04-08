@@ -1,0 +1,18 @@
+{
+  "name": "minimal-dark",
+  "backgrounds": [],
+  "fallbackBackground": "linear-gradient(180deg, #0a0a0a 0%, #111111 100%)",
+  "cycleIntervalMs": 0,
+  "calendar": {
+    "cellBorder": "rgba(255, 255, 255, 0.08)",
+    "textColor": "rgba(255, 255, 255, 0.85)",
+    "todayBg": "rgba(255, 255, 255, 0.08)",
+    "headerBg": "rgba(255, 255, 255, 0.04)",
+    "eventBg": "rgba(255, 255, 255, 0.12)",
+    "eventBorder": "rgba(255, 255, 255, 0.2)",
+    "toolbarButtonBg": "rgba(255, 255, 255, 0.06)",
+    "toolbarButtonBorder": "rgba(255, 255, 255, 0.12)",
+    "drawerBg": "rgba(10, 10, 10, 0.97)",
+    "drawerBorder": "rgba(255, 255, 255, 0.1)"
+  }
+}

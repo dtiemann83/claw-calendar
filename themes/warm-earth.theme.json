@@ -1,0 +1,18 @@
+{
+  "name": "warm-earth",
+  "backgrounds": [],
+  "fallbackBackground": "linear-gradient(160deg, #1c0a00 0%, #3d1a00 40%, #5c2d0a 70%, #2d1200 100%)",
+  "cycleIntervalMs": 0,
+  "calendar": {
+    "cellBorder": "rgba(251, 191, 36, 0.15)",
+    "textColor": "rgba(255, 237, 213, 0.95)",
+    "todayBg": "rgba(251, 146, 60, 0.2)",
+    "headerBg": "rgba(30, 10, 0, 0.5)",
+    "eventBg": "rgba(194, 65, 12, 0.85)",
+    "eventBorder": "rgba(251, 146, 60, 0.9)",
+    "toolbarButtonBg": "rgba(251, 146, 60, 0.12)",
+    "toolbarButtonBorder": "rgba(251, 146, 60, 0.3)",
+    "drawerBg": "rgba(25, 8, 0, 0.95)",
+    "drawerBorder": "rgba(251, 146, 60, 0.2)"
+  }
+}

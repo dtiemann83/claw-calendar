@@ -1,0 +1,18 @@
+{
+  "name": "terminal",
+  "backgrounds": [],
+  "fallbackBackground": "#000000",
+  "cycleIntervalMs": 0,
+  "calendar": {
+    "cellBorder": "rgba(0, 255, 65, 0.2)",
+    "textColor": "#00ff41",
+    "todayBg": "rgba(0, 255, 65, 0.1)",
+    "headerBg": "rgba(0, 255, 65, 0.05)",
+    "eventBg": "rgba(0, 180, 46, 0.7)",
+    "eventBorder": "rgba(0, 255, 65, 0.9)",
+    "toolbarButtonBg": "rgba(0, 255, 65, 0.08)",
+    "toolbarButtonBorder": "rgba(0, 255, 65, 0.3)",
+    "drawerBg": "rgba(0, 10, 2, 0.97)",
+    "drawerBorder": "rgba(0, 255, 65, 0.3)"
+  }
+}

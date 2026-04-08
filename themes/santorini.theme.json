@@ -1,0 +1,20 @@
+{
+  "name": "santorini",
+  "backgrounds": [
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Oia_Santorini_Sunset_1.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Santorini_sunset_2_Luca_Galuzzi_2005.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Santorini_Island_01.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Fira_Santorini_Greece_2.jpg"
+  ],
+  "fallbackBackground": "linear-gradient(160deg, #1a1040 0%, #2d1b69 40%, #c2410c 100%)",
+  "calendar": {
+    "eventBg": "rgba(99, 51, 200, 0.85)",
+    "eventBorder": "rgba(167, 139, 250, 0.9)",
+    "todayBg": "rgba(167, 139, 250, 0.18)",
+    "headerBg": "rgba(10, 5, 30, 0.45)",
+    "toolbarButtonBg": "rgba(167, 139, 250, 0.12)",
+    "toolbarButtonBorder": "rgba(167, 139, 250, 0.3)",
+    "drawerBg": "rgba(15, 8, 40, 0.92)",
+    "drawerBorder": "rgba(167, 139, 250, 0.2)"
+  }
+}

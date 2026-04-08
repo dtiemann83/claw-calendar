@@ -1,0 +1,20 @@
+{
+  "name": "patagonia",
+  "backgrounds": [
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Torres_del_Paine_and_Lago_Pehoe.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Perito_Moreno_Glacier,_Los_Glaciares_National_Park,_Argentina.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Patagonia_-_Trekking_entre_los_glaciares_(6968175861).jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Cuernos_del_Paine_from_Lake_Pehoe.jpg"
+  ],
+  "fallbackBackground": "linear-gradient(160deg, #0d2137 0%, #0e3d38 50%, #1a4a30 100%)",
+  "calendar": {
+    "eventBg": "rgba(14, 120, 110, 0.85)",
+    "eventBorder": "rgba(52, 211, 153, 0.9)",
+    "todayBg": "rgba(52, 211, 153, 0.18)",
+    "headerBg": "rgba(5, 25, 30, 0.45)",
+    "toolbarButtonBg": "rgba(52, 211, 153, 0.12)",
+    "toolbarButtonBorder": "rgba(52, 211, 153, 0.3)",
+    "drawerBg": "rgba(5, 30, 30, 0.92)",
+    "drawerBorder": "rgba(52, 211, 153, 0.2)"
+  }
+}

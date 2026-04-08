@@ -1,0 +1,20 @@
+{
+  "name": "iceland",
+  "backgrounds": [
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Jokulsarlon_Glacier_Lagoon.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Skogafoss_Waterfall_Iceland.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Vestrahorn_(2).jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Kirkjufell_and_Kirkjufellsfoss_(Unsplash).jpg"
+  ],
+  "fallbackBackground": "linear-gradient(160deg, #020818 0%, #0c1445 45%, #1a0a3d 75%, #0a1f1a 100%)",
+  "calendar": {
+    "eventBg": "rgba(88, 28, 200, 0.85)",
+    "eventBorder": "rgba(139, 92, 246, 0.9)",
+    "todayBg": "rgba(139, 92, 246, 0.18)",
+    "headerBg": "rgba(5, 5, 25, 0.5)",
+    "toolbarButtonBg": "rgba(139, 92, 246, 0.12)",
+    "toolbarButtonBorder": "rgba(139, 92, 246, 0.3)",
+    "drawerBg": "rgba(8, 5, 30, 0.92)",
+    "drawerBorder": "rgba(139, 92, 246, 0.2)"
+  }
+}
