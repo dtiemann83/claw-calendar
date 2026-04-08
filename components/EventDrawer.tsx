@@ -11,16 +11,24 @@ import {
   DrawerTitle,
 } from "@chakra-ui/react"
 import type { EventApi } from "@fullcalendar/core"
+import type { CalendarTheme } from "@/themes/types"
+import { resolveIcon } from "@/lib/icons"
 
 interface Props {
   event: EventApi | null
   onClose: () => void
+  theme: CalendarTheme
 }
 
 function formatDateTime(date: Date | null, allDay: boolean): string {
   if (!date) return ""
   if (allDay) {
-    return date.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+    return date.toLocaleDateString([], {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })
   }
   return date.toLocaleString([], {
     weekday: "long",
@@ -32,7 +40,10 @@ function formatDateTime(date: Date | null, allDay: boolean): string {
   })
 }
 
-export function EventDrawer({ event, onClose }: Props) {
+export function EventDrawer({ event, onClose, theme }: Props) {
+  const { calendar: c } = theme
+  const CloseIcon = resolveIcon("close", theme)
+
   return (
     <DrawerRoot
       open={event !== null}
@@ -44,14 +55,20 @@ export function EventDrawer({ event, onClose }: Props) {
       <DrawerPositioner>
         <DrawerContent
           style={{
-            background: "rgba(15, 23, 42, 0.92)",
+            background: c.drawerBg,
             backdropFilter: "blur(16px)",
-            borderLeft: "1px solid rgba(255,255,255,0.12)",
+            borderLeft: `1px solid ${c.drawerBorder}`,
             color: "#fff",
           }}
         >
-          <DrawerHeader borderBottom="1px solid rgba(255,255,255,0.1)" pb={4}>
-            <DrawerTitle fontSize="lg" fontWeight={600}>
+          <DrawerHeader
+            style={{
+              borderBottom: `1px solid ${c.drawerBorder}`,
+              paddingBottom: 16,
+              position: "relative",
+            }}
+          >
+            <DrawerTitle style={{ fontSize: "1.1rem", fontWeight: 600 }}>
               {event?.title ?? ""}
             </DrawerTitle>
             <DrawerCloseTrigger
@@ -61,14 +78,22 @@ export function EventDrawer({ event, onClose }: Props) {
                 right: 16,
                 color: "rgba(255,255,255,0.6)",
                 cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "transparent",
+                border: "none",
+                padding: 4,
+                borderRadius: 4,
               }}
-            />
+            >
+              <CloseIcon size={18} />
+            </DrawerCloseTrigger>
           </DrawerHeader>
 
-          <DrawerBody pt={4}>
+          <DrawerBody style={{ paddingTop: 16 }}>
             {event && (
               <dl style={{ display: "grid", gap: "12px" }}>
-                {/* Color indicator + calendar source */}
                 <Row
                   label="Calendar"
                   value={
@@ -88,16 +113,10 @@ export function EventDrawer({ event, onClose }: Props) {
                   }
                 />
 
-                <Row
-                  label="Start"
-                  value={formatDateTime(event.start, event.allDay)}
-                />
+                <Row label="Start" value={formatDateTime(event.start, event.allDay)} />
 
                 {event.end && !event.allDay && (
-                  <Row
-                    label="End"
-                    value={formatDateTime(event.end, false)}
-                  />
+                  <Row label="End" value={formatDateTime(event.end, false)} />
                 )}
 
                 {event.allDay && (
@@ -112,7 +131,11 @@ export function EventDrawer({ event, onClose }: Props) {
                         href={event.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ color: "#93c5fd", textDecoration: "underline", wordBreak: "break-all" }}
+                        style={{
+                          color: "#93c5fd",
+                          textDecoration: "underline",
+                          wordBreak: "break-all",
+                        }}
                       >
                         {event.url}
                       </a>
