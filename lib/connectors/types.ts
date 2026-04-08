@@ -1,7 +1,9 @@
+// lib/connectors/types.ts
 interface ConnectorBase {
   id: string
   name: string
   color: string
+  iconRules?: Record<string, string>
 }
 
 export interface AgentApiConnector extends ConnectorBase {
@@ -36,4 +38,5 @@ export interface ConnectorMeta {
   name: string
   color: string
   proxyUrl: string
+  iconRules?: Record<string, string>
 }
