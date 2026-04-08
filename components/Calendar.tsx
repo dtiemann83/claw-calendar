@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
@@ -16,7 +16,9 @@ interface Props {
 export function Calendar({ theme }: Props) {
   const { calendar: c } = theme
   const [eventSources, setEventSources] = useState<object[]>([])
+  const calendarRef = useRef<FullCalendar>(null)
 
+  // Load connector list once on mount
   useEffect(() => {
     fetch("/api/connectors")
       .then((res) => {
@@ -38,6 +40,29 @@ export function Calendar({ theme }: Props) {
       })
   }, [])
 
+  // Stream updates — refetch events when the server detects a change
+  useEffect(() => {
+    const es = new EventSource("/api/stream")
+
+    es.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data) as { type: string }
+        if (msg.type === "update") {
+          calendarRef.current?.getApi().refetchEvents()
+        }
+      } catch {
+        // malformed message — ignore
+      }
+    }
+
+    es.onerror = () => {
+      // EventSource will automatically reconnect on error
+      console.warn("[calendar] SSE connection lost, will reconnect automatically")
+    }
+
+    return () => es.close()
+  }, [])
+
   return (
     <div
       style={
@@ -56,6 +81,7 @@ export function Calendar({ theme }: Props) {
       className="fc-theme-wrapper"
     >
       <FullCalendar
+        ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, iCalendarPlugin]}
         initialView="dayGridMonth"
         height="100vh"
