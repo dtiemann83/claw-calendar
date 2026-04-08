@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { CalendarTheme } from "@/themes/types"
 
 interface Props {
@@ -8,23 +8,53 @@ interface Props {
 }
 
 export function ThemeBackground({ theme }: Props) {
-  const hasImages = theme.backgrounds.length > 0
-  const [current, setCurrent] = useState(0)
-  const [next, setNext] = useState(1)
-  const [transitioning, setTransitioning] = useState(false)
+  const { backgrounds, cycleIntervalMs, fallbackBackground, backgroundOverlay } = theme
+  const n = backgrounds.length
+  const hasImages = n > 0
 
+  // Deterministic index: which "slot" is the current time in?
+  const getSlot = useCallback(
+    () => Math.floor(Date.now() / cycleIntervalMs) % Math.max(n, 1),
+    [cycleIntervalMs, n]
+  )
+
+  const [photoIndex, setPhotoIndex] = useState(getSlot)
+  const [transitioning, setTransitioning] = useState(false)
+  const crossfadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Re-sync index when interval length or photo count changes
   useEffect(() => {
-    if (!hasImages) return
-    const interval = setInterval(() => {
+    setPhotoIndex(getSlot())
+  }, [getSlot])
+
+  // Schedule a crossfade at the exact moment the next slot begins
+  useEffect(() => {
+    if (!hasImages || n <= 1) return
+
+    const now = Date.now()
+    const currentSlot = Math.floor(now / cycleIntervalMs)
+    const nextBoundary = (currentSlot + 1) * cycleIntervalMs
+    const delay = nextBoundary - now
+
+    const outerTimer = setTimeout(() => {
       setTransitioning(true)
-      setTimeout(() => {
-        setCurrent((c) => (c + 1) % theme.backgrounds.length)
-        setNext((n) => (n + 1) % theme.backgrounds.length)
+      crossfadeTimer.current = setTimeout(() => {
+        setPhotoIndex(Math.floor(Date.now() / cycleIntervalMs) % n)
         setTransitioning(false)
+        crossfadeTimer.current = null
       }, 1500)
-    }, theme.cycleIntervalMs)
-    return () => clearInterval(interval)
-  }, [theme, hasImages])
+    }, delay)
+
+    return () => {
+      clearTimeout(outerTimer)
+      if (crossfadeTimer.current) {
+        clearTimeout(crossfadeTimer.current)
+        crossfadeTimer.current = null
+      }
+    }
+  }, [cycleIntervalMs, n, photoIndex, hasImages])
+
+  const nextIndex = (photoIndex + 1) % Math.max(n, 1)
 
   const base: React.CSSProperties = {
     position: "fixed",
@@ -32,41 +62,47 @@ export function ThemeBackground({ theme }: Props) {
     backgroundSize: "cover",
     backgroundPosition: "center",
     transition: "opacity 1.5s ease-in-out",
-    zIndex: -1,
+    zIndex: -2,
   }
 
   return (
     <>
-      {/* Fallback — always present behind everything, visible when images are absent or loading */}
-      <div
-        style={{
-          ...base,
-          background: theme.fallbackBackground,
-          zIndex: -3,
-          transition: "none",
-        }}
-      />
+      {/* Fallback gradient — visible before images load or when no images are set */}
+      <div style={{ ...base, background: fallbackBackground, zIndex: -4, transition: "none" }} />
 
       {hasImages && (
         <>
-          {/* Current image — fades out during transition */}
+          {/* Current photo — fades out during transition */}
           <div
             style={{
               ...base,
-              backgroundImage: `url(${theme.backgrounds[current]})`,
+              backgroundImage: `url(${backgrounds[photoIndex]})`,
               opacity: transitioning ? 0 : 1,
             }}
           />
-          {/* Next image — always underneath, becomes visible as current fades */}
+          {/* Next photo — revealed as current fades */}
           <div
             style={{
               ...base,
-              backgroundImage: `url(${theme.backgrounds[next]})`,
+              backgroundImage: `url(${backgrounds[nextIndex]})`,
               opacity: 1,
-              zIndex: -2,
+              zIndex: -3,
             }}
           />
         </>
+      )}
+
+      {/* Overlay — improves text legibility over bright photos */}
+      {backgroundOverlay && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: backgroundOverlay,
+            zIndex: -1,
+            transition: "none",
+          }}
+        />
       )}
     </>
   )
