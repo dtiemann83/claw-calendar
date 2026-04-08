@@ -22,38 +22,6 @@ html, body {
   padding: 12px;
 }
 
-.fc .fc-toolbar {
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(8px);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-bottom: 8px !important;
-}
-
-.fc .fc-toolbar-title {
-  color: #fff;
-  font-size: 1.4rem;
-  font-weight: 600;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
-}
-
-.fc .fc-button {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  color: #fff !important;
-  backdrop-filter: blur(4px);
-  text-transform: capitalize;
-  transition: background 0.2s;
-}
-
-.fc .fc-button:hover {
-  background: rgba(255, 255, 255, 0.28) !important;
-}
-
-.fc .fc-button-active,
-.fc .fc-button:not(:disabled):active {
-  background: rgba(255, 255, 255, 0.35) !important;
-}
 
 .fc .fc-col-header-cell {
   background: rgba(0, 0, 0, 0.3);
