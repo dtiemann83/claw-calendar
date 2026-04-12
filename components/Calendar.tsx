@@ -13,7 +13,7 @@ import type { CalendarTheme } from "@/themes/types"
 import type { TagConfig } from "@/lib/events/tags"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveEventIcon } from "@/lib/events/icons"
-import { discoverNewTags } from "@/lib/events/tags"
+import { discoverNewTags, parseEventTags } from "@/lib/events/tags"
 import { CalendarToolbar } from "./CalendarToolbar"
 import { EventDrawer } from "./EventDrawer"
 
@@ -187,22 +187,72 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
   const renderEventContent = useCallback(
     (arg: EventContentArg) => {
       const icon = resolveEventIcon(arg.event, connectors)
-      if (!icon) return true // use FullCalendar's default rendering
+      const description = arg.event.extendedProps?.description as string | undefined
+      const parsed = parseEventTags(description, tagConfigs)
+
+      // Find the first matching category config for background color
+      const categoryConfig = parsed.categories
+        .map((name) => tagConfigs.find((c) => c.name === name && c.type === "category"))
+        .find((c) => c !== undefined)
+
+      // Collect who badges
+      const whoBadges = parsed.who
+        .map((name) => tagConfigs.find((c) => c.name === name && c.type === "who"))
+        .filter((c): c is NonNullable<typeof c> => c !== undefined)
+
+      // Apply category color to the FullCalendar event element
+      if (categoryConfig) {
+        arg.event.setProp("backgroundColor", categoryConfig.color)
+        arg.event.setProp("borderColor", categoryConfig.color)
+      }
+
+      const hasCustomContent = icon || whoBadges.length > 0
+      if (!hasCustomContent) return true
+
       return (
         <div
           style={{
+            display: "flex",
+            alignItems: "center",
             overflow: "hidden",
             padding: "0 2px",
             whiteSpace: "nowrap",
-            textOverflow: "ellipsis",
+            width: "100%",
           }}
         >
-          <span style={{ marginRight: "0.2em" }}>{icon}</span>
-          <span style={{ fontWeight: 500 }}>{arg.event.title}</span>
+          <div style={{ overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>
+            {icon && <span style={{ marginRight: "0.2em" }}>{icon}</span>}
+            <span style={{ fontWeight: 500 }}>{arg.event.title}</span>
+          </div>
+          {whoBadges.length > 0 && (
+            <div style={{ display: "flex", gap: 2, marginLeft: 4, flexShrink: 0 }}>
+              {whoBadges.map((badge) => (
+                <span
+                  key={badge.name}
+                  title={badge.name}
+                  style={{
+                    background: "rgba(255,255,255,0.25)",
+                    borderRadius: "50%",
+                    width: 18,
+                    height: 18,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.6rem",
+                    fontWeight: 700,
+                    flexShrink: 0,
+                    lineHeight: 1,
+                  }}
+                >
+                  {badge.initial ?? badge.name[0].toUpperCase()}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )
     },
-    [connectors]
+    [connectors, tagConfigs]
   )
 
   // Apply event opacity: convert any solid rgb() background on .fc-event
