@@ -70,6 +70,23 @@ body {
   border-radius: 4px;
 }
 
+/* Background events (all-day events) — title pinned to bottom of day cell */
+.fc .fc-bg-event {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+.fc .fc-bg-event .fc-event-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6);
+  padding: 3px 8px;
+  font-style: normal;
+}
+
 .fc .fc-event-title {
   font-weight: 500;
 }
