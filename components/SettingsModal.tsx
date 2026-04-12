@@ -5,6 +5,7 @@ import { SwitchRoot, SwitchHiddenInput, SwitchControl, SwitchThumb } from "@chak
 import type { CalendarTheme, ThemeOverrides } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveIcon } from "@/lib/icons"
+import { CollapsibleThemeSettings } from "./CollapsibleThemeSettings"
 
 interface Props {
   open: boolean
@@ -42,9 +43,9 @@ export function SettingsModal({
   onCycleIntervalChange,
   idleResetMs,
   onIdleResetChange,
-  themeOverrides: _themeOverrides,
-  onOverrideChange: _onOverrideChange,
-  onResetOverrides: _onResetOverrides,
+  themeOverrides,
+  onOverrideChange,
+  onResetOverrides,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("Theme")
 
@@ -75,7 +76,7 @@ export function SettingsModal({
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: "min(500px, 92vw)",
+          width: "min(760px, 94vw)",
           maxHeight: "80vh",
           display: "flex",
           flexDirection: "column",
@@ -209,6 +210,14 @@ export function SettingsModal({
                   })}
                 </div>
               </Section>
+
+              <CollapsibleThemeSettings
+                theme={theme}
+                overrides={themeOverrides}
+                onOverrideChange={onOverrideChange}
+                onReset={onResetOverrides}
+                drawerBorder={c.drawerBorder}
+              />
 
               {theme.backgrounds.length > 0 && (() => {
                 const activeIdx = CYCLE_PRESETS.findIndex((p) => p.ms === cycleIntervalMs)
