@@ -1,3 +1,4 @@
+// lib/themeOverrides.ts
 import type { CalendarTheme, ThemeOverrides, AllThemeOverrides } from "@/themes/types"
 
 const LS_KEY = "claw:themeOverrides"
@@ -13,6 +14,7 @@ export function loadAllOverrides(): AllThemeOverrides {
 }
 
 export function saveAllOverrides(all: AllThemeOverrides): void {
+  if (typeof window === "undefined") return
   localStorage.setItem(LS_KEY, JSON.stringify(all))
 }
 

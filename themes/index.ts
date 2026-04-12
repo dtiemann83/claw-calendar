@@ -12,6 +12,7 @@ function readThemeFile(file: string): ThemeInput {
 
 function deepMerge(base: CalendarTheme, override: ThemeInput): CalendarTheme {
   return {
+    font: override.font ?? base.font,
     name: override.name,
     backgrounds: override.backgrounds ?? base.backgrounds,
     fallbackBackground: override.fallbackBackground ?? base.fallbackBackground,

@@ -26,6 +26,7 @@ export interface CalendarTheme {
 }
 
 export type ThemeInput = {
+  font?: string
   name: string
   backgrounds?: string[]
   fallbackBackground?: string
