@@ -7,6 +7,7 @@ import type { TagConfig } from "@/lib/events/tags"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveIcon } from "@/lib/icons"
 import { CollapsibleThemeSettings } from "./CollapsibleThemeSettings"
+import { TagSettingsForm } from "./TagSettingsForm"
 
 interface Props {
   open: boolean
@@ -29,7 +30,7 @@ interface Props {
   onTagConfigsChange: (configs: TagConfig[]) => void
 }
 
-const TABS = ["Theme", "Calendars", "Behavior"] as const
+const TABS = ["Theme", "Calendars", "Tags", "Behavior"] as const
 type Tab = typeof TABS[number]
 
 export function SettingsModal({
@@ -327,6 +328,13 @@ export function SettingsModal({
               </Section>
             )
           })()}
+
+          {activeTab === "Tags" && (
+            <TagSettingsForm
+              tagConfigs={tagConfigs}
+              onTagConfigsChange={onTagConfigsChange}
+            />
+          )}
 
           {activeTab === "Calendars" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
