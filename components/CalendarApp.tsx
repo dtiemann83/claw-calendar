@@ -8,7 +8,7 @@ import type { ConnectorMeta } from "@/lib/connectors/types"
 import { ThemeBackground } from "./ThemeBackground"
 import { SettingsModal } from "./SettingsModal"
 import { loadAllOverrides, saveAllOverrides, mergeThemeOverrides } from "@/lib/themeOverrides"
-import { fonts } from "@/lib/fonts"
+import { fonts, getActiveFont } from "@/lib/fonts"
 import type { FontId } from "@/lib/fonts"
 
 const Calendar = dynamic(
@@ -68,6 +68,11 @@ export function CalendarApp({ themes }: Props) {
         "--font-family",
         fonts[theme.font as FontId].family
       )
+    } else {
+      document.documentElement.style.setProperty(
+        "--font-family",
+        fonts[getActiveFont()].family
+      )
     }
   }, [theme.font])
 
@@ -95,7 +100,7 @@ export function CalendarApp({ themes }: Props) {
   const handleOverrideChange = (patch: ThemeOverrides) => {
     setAllOverrides((prev) => {
       const current = prev[themeName] ?? {}
-      const next: AllThemeOverrides = {
+      return {
         ...prev,
         [themeName]: {
           ...current,
@@ -105,8 +110,6 @@ export function CalendarApp({ themes }: Props) {
             : current.calendar,
         },
       }
-      saveAllOverrides(next)
-      return next
     })
   }
 
@@ -114,12 +117,14 @@ export function CalendarApp({ themes }: Props) {
     setAllOverrides((prev) => {
       const next = { ...prev }
       delete next[themeName]
-      saveAllOverrides(next)
       return next
     })
-    // Restore server-configured font
-    document.documentElement.style.removeProperty("--font-family")
   }
+
+  // Persist overrides whenever they change (outside updater to avoid Strict Mode double-fire)
+  useEffect(() => {
+    saveAllOverrides(allOverrides)
+  }, [allOverrides])
 
   const handleToggleConnector = (id: string) => {
     setHiddenConnectorIds((prev) => {

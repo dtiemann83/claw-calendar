@@ -1,4 +1,3 @@
-// components/ColorRow.tsx
 "use client"
 
 import {

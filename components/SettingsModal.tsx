@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { SwitchRoot, SwitchHiddenInput, SwitchControl, SwitchThumb } from "@chakra-ui/react"
-import type { CalendarTheme } from "@/themes/types"
+import type { CalendarTheme, ThemeOverrides } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveIcon } from "@/lib/icons"
 
@@ -20,6 +20,9 @@ interface Props {
   onCycleIntervalChange: (ms: number) => void
   idleResetMs: number
   onIdleResetChange: (ms: number) => void
+  themeOverrides: ThemeOverrides
+  onOverrideChange: (patch: ThemeOverrides) => void
+  onResetOverrides: () => void
 }
 
 const TABS = ["Theme", "Calendars", "Behavior"] as const
@@ -39,6 +42,9 @@ export function SettingsModal({
   onCycleIntervalChange,
   idleResetMs,
   onIdleResetChange,
+  themeOverrides: _themeOverrides,
+  onOverrideChange: _onOverrideChange,
+  onResetOverrides: _onResetOverrides,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("Theme")
 
