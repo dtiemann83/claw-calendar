@@ -13,6 +13,7 @@ import type { CalendarTheme } from "@/themes/types"
 import type { TagConfig } from "@/lib/events/tags"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveEventIcon } from "@/lib/events/icons"
+import { discoverNewTags } from "@/lib/events/tags"
 import { CalendarToolbar } from "./CalendarToolbar"
 import { EventDrawer } from "./EventDrawer"
 
@@ -134,6 +135,16 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
     setCalendarTitle(arg.view.title)
     setCurrentView(arg.view.type)
   }, [])
+
+  const handleEventsSet = useCallback(() => {
+    const api = calendarRef.current?.getApi()
+    if (!api) return
+    const descriptions = api.getEvents().map((e) => e.extendedProps?.description as string | undefined)
+    const newTags = discoverNewTags(descriptions, tagConfigs)
+    if (newTags.length > 0) {
+      onTagConfigsChange([...tagConfigs, ...newTags])
+    }
+  }, [tagConfigs, onTagConfigsChange])
 
   const renderDayHeader = useCallback((arg: DayHeaderContentArg) => {
     if (!arg.view.type.startsWith("timeGrid")) return true
@@ -289,6 +300,7 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
           navLinkDayClick={handleNavLinkDayClick}
           eventClick={handleEventClick}
           datesSet={handleDatesSet}
+          eventsSet={handleEventsSet}
           dayHeaderContent={renderDayHeader}
           eventContent={renderEventContent}
         />
