@@ -8,7 +8,7 @@ import type { ConnectorMeta } from "@/lib/connectors/types"
 import { ThemeBackground } from "./ThemeBackground"
 import { SettingsModal } from "./SettingsModal"
 import { loadAllOverrides, saveAllOverrides, mergeThemeOverrides } from "@/lib/themeOverrides"
-import { fonts, getActiveFont } from "@/lib/fonts"
+import { fonts } from "@/lib/fonts"
 import type { FontId } from "@/lib/fonts"
 
 const Calendar = dynamic(
@@ -23,9 +23,10 @@ const LS_IDLE_KEY  = "claw:idleReset"
 
 interface Props {
   themes: Record<string, CalendarTheme>
+  configuredFont?: string
 }
 
-export function CalendarApp({ themes }: Props) {
+export function CalendarApp({ themes, configuredFont }: Props) {
   const themeNames = Object.keys(themes)
   const [themeName, setThemeName] = useState(DEFAULT_THEME)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -68,13 +69,13 @@ export function CalendarApp({ themes }: Props) {
         "--font-family",
         fonts[theme.font as FontId].family
       )
-    } else {
+    } else if (configuredFont && configuredFont in fonts) {
       document.documentElement.style.setProperty(
         "--font-family",
-        fonts[getActiveFont()].family
+        fonts[configuredFont as FontId].family
       )
     }
-  }, [theme.font])
+  }, [theme.font, configuredFont])
 
   const handleThemeChange = (name: string) => {
     setThemeName(name)

@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 import type { CSSProperties } from "react"
 import "./globals.css"
-import { getActiveFont, fonts } from "@/lib/fonts"
+import { fonts } from "@/lib/fonts"
+import { getActiveFont } from "@/lib/fonts/server"
 import { Providers } from "@/components/providers"
 
 export const metadata: Metadata = {
