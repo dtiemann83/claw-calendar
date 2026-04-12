@@ -225,20 +225,15 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
                   key={badge.name}
                   title={badge.name}
                   style={{
-                    background: "rgba(255,255,255,0.25)",
-                    borderRadius: "50%",
-                    width: 18,
-                    height: 18,
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "0.6rem",
-                    fontWeight: 700,
+                    fontSize: "0.95rem",
                     flexShrink: 0,
                     lineHeight: 1,
                   }}
                 >
-                  {badge.initial ?? badge.name[0].toUpperCase()}
+                  {badge.initial ?? "👤"}
                 </span>
               ))}
             </div>

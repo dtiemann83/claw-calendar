@@ -68,7 +68,7 @@ export function TagSettingsForm({ tagConfigs, onTagConfigsChange }: Props) {
                 const type = e.target.value as "category" | "who"
                 const patch: Partial<TagConfig> = { type }
                 if (type === "who" && !tag.initial) {
-                  patch.initial = tag.name[0].toUpperCase()
+                  patch.initial = "👤"
                 }
                 updateTag(i, patch)
               }}
@@ -99,18 +99,17 @@ export function TagSettingsForm({ tagConfigs, onTagConfigsChange }: Props) {
           {/* Initial field (who only) */}
           {tag.type === "who" && (
             <input
-              value={tag.initial ?? tag.name[0].toUpperCase()}
-              onChange={(e) => updateTag(i, { initial: e.target.value.slice(0, 2).toUpperCase() })}
-              maxLength={2}
+              value={tag.initial ?? "👤"}
+              onChange={(e) => updateTag(i, { initial: e.target.value })}
+              placeholder="👤"
               style={{
-                width: 32,
+                width: 40,
                 textAlign: "center",
                 background: "rgba(255,255,255,0.06)",
                 border: "1px solid rgba(255,255,255,0.14)",
                 borderRadius: 4,
                 color: "#fff",
-                fontSize: "0.78rem",
-                fontWeight: 700,
+                fontSize: "0.95rem",
                 padding: "3px 0",
                 fontFamily: "inherit",
                 flexShrink: 0,
