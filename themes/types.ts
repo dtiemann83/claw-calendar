@@ -1,5 +1,6 @@
 // themes/types.ts
 export interface CalendarTheme {
+  font?: string
   name: string
   backgrounds: string[]
   fallbackBackground: string
@@ -36,3 +37,11 @@ export type ThemeInput = {
     overrides?: Record<string, string>
   }
 }
+
+export type ThemeOverrides = {
+  font?: string
+  backgroundOverlay?: string
+  calendar?: Partial<CalendarTheme["calendar"]>
+}
+
+export type AllThemeOverrides = Record<string, ThemeOverrides>
