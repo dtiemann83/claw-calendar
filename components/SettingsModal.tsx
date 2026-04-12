@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { SwitchRoot, SwitchHiddenInput, SwitchControl, SwitchThumb } from "@chakra-ui/react"
 import type { CalendarTheme, ThemeOverrides } from "@/themes/types"
+import type { TagConfig } from "@/lib/events/tags"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveIcon } from "@/lib/icons"
 import { CollapsibleThemeSettings } from "./CollapsibleThemeSettings"
@@ -24,6 +25,8 @@ interface Props {
   themeOverrides: ThemeOverrides
   onOverrideChange: (patch: ThemeOverrides) => void
   onResetOverrides: () => void
+  tagConfigs: TagConfig[]
+  onTagConfigsChange: (configs: TagConfig[]) => void
 }
 
 const TABS = ["Theme", "Calendars", "Behavior"] as const
@@ -46,6 +49,8 @@ export function SettingsModal({
   themeOverrides,
   onOverrideChange,
   onResetOverrides,
+  tagConfigs,
+  onTagConfigsChange,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("Theme")
 

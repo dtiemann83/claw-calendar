@@ -5,6 +5,7 @@ import dynamic from "next/dynamic"
 import type { CalendarTheme } from "@/themes/types"
 import type { AllThemeOverrides, ThemeOverrides } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
+import type { TagConfig } from "@/lib/events/tags"
 import { ThemeBackground } from "./ThemeBackground"
 import { SettingsModal } from "./SettingsModal"
 import { loadAllOverrides, saveAllOverrides, mergeThemeOverrides } from "@/lib/themeOverrides"
@@ -20,6 +21,7 @@ const DEFAULT_THEME = "yosemite"
 const LS_THEME_KEY = "claw:theme"
 const LS_CYCLE_KEY = "claw:cycleInterval"
 const LS_IDLE_KEY  = "claw:idleReset"
+const LS_TAGS_KEY = "claw:tagConfigs"
 
 interface Props {
   themes: Record<string, CalendarTheme>
@@ -35,6 +37,7 @@ export function CalendarApp({ themes, configuredFont }: Props) {
   const [cycleIntervalMs, setCycleIntervalMs] = useState<number>(3_600_000)
   const [idleResetMs, setIdleResetMs] = useState<number>(0)
   const [allOverrides, setAllOverrides] = useState<AllThemeOverrides>({})
+  const [tagConfigs, setTagConfigs] = useState<TagConfig[]>([])
 
   // Read saved preferences from localStorage after mount
   useEffect(() => {
@@ -53,6 +56,11 @@ export function CalendarApp({ themes, configuredFont }: Props) {
     if (savedIdle) setIdleResetMs(parseInt(savedIdle, 10))
 
     setAllOverrides(loadAllOverrides())
+
+    const savedTags = localStorage.getItem(LS_TAGS_KEY)
+    if (savedTags) {
+      try { setTagConfigs(JSON.parse(savedTags)) } catch { /* ignore corrupt data */ }
+    }
   }, [themes])
 
   const baseTheme = themes[themeName] ?? themes[themeNames[0]]
@@ -127,6 +135,14 @@ export function CalendarApp({ themes, configuredFont }: Props) {
     saveAllOverrides(allOverrides)
   }, [allOverrides])
 
+  useEffect(() => {
+    localStorage.setItem(LS_TAGS_KEY, JSON.stringify(tagConfigs))
+  }, [tagConfigs])
+
+  const handleTagConfigsChange = (configs: TagConfig[]) => {
+    setTagConfigs(configs)
+  }
+
   const handleToggleConnector = (id: string) => {
     setHiddenConnectorIds((prev) => {
       const next = new Set(prev)
@@ -145,6 +161,8 @@ export function CalendarApp({ themes, configuredFont }: Props) {
         onOpenSettings={() => setSettingsOpen(true)}
         onConnectorsLoaded={setConnectors}
         idleResetMs={idleResetMs}
+        tagConfigs={tagConfigs}
+        onTagConfigsChange={handleTagConfigsChange}
       />
       <SettingsModal
         open={settingsOpen}
@@ -163,6 +181,8 @@ export function CalendarApp({ themes, configuredFont }: Props) {
         themeOverrides={allOverrides[themeName] ?? {}}
         onOverrideChange={handleOverrideChange}
         onResetOverrides={handleResetOverrides}
+        tagConfigs={tagConfigs}
+        onTagConfigsChange={handleTagConfigsChange}
       />
     </main>
   )

@@ -10,6 +10,7 @@ import iCalendarPlugin from "@fullcalendar/icalendar"
 import interactionPlugin from "@fullcalendar/interaction"
 import type { EventApi, EventClickArg, EventContentArg, DatesSetArg, DayHeaderContentArg } from "@fullcalendar/core"
 import type { CalendarTheme } from "@/themes/types"
+import type { TagConfig } from "@/lib/events/tags"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveEventIcon } from "@/lib/events/icons"
 import { CalendarToolbar } from "./CalendarToolbar"
@@ -21,11 +22,13 @@ interface Props {
   onOpenSettings?: () => void
   onConnectorsLoaded?: (connectors: ConnectorMeta[]) => void
   idleResetMs?: number
+  tagConfigs: TagConfig[]
+  onTagConfigsChange: (configs: TagConfig[]) => void
 }
 
 const FADE_MS = 160
 
-export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnectorsLoaded, idleResetMs }: Props) {
+export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnectorsLoaded, idleResetMs, tagConfigs, onTagConfigsChange }: Props) {
   const { calendar: c } = theme
   const [connectors, setConnectors] = useState<ConnectorMeta[]>([])
   const [eventSources, setEventSources] = useState<object[]>([])

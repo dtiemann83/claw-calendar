@@ -9,5 +9,5 @@ const Calendar = dynamic(
 )
 
 export function CalendarLoader({ theme }: { theme: CalendarTheme }) {
-  return <Calendar theme={theme} />
+  return <Calendar theme={theme} tagConfigs={[]} onTagConfigsChange={() => {}} />
 }
