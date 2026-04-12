@@ -3,9 +3,13 @@
 import { useState, useEffect, useMemo } from "react"
 import dynamic from "next/dynamic"
 import type { CalendarTheme } from "@/themes/types"
+import type { AllThemeOverrides, ThemeOverrides } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { ThemeBackground } from "./ThemeBackground"
 import { SettingsModal } from "./SettingsModal"
+import { loadAllOverrides, saveAllOverrides, mergeThemeOverrides } from "@/lib/themeOverrides"
+import { fonts } from "@/lib/fonts"
+import type { FontId } from "@/lib/fonts"
 
 const Calendar = dynamic(
   () => import("@/components/Calendar").then((m) => m.Calendar),
@@ -29,6 +33,7 @@ export function CalendarApp({ themes }: Props) {
   const [hiddenConnectorIds, setHiddenConnectorIds] = useState<Set<string>>(new Set())
   const [cycleIntervalMs, setCycleIntervalMs] = useState<number>(3_600_000)
   const [idleResetMs, setIdleResetMs] = useState<number>(0)
+  const [allOverrides, setAllOverrides] = useState<AllThemeOverrides>({})
 
   // Read saved preferences from localStorage after mount
   useEffect(() => {
@@ -39,27 +44,36 @@ export function CalendarApp({ themes }: Props) {
     if (savedCycle) {
       setCycleIntervalMs(parseInt(savedCycle, 10))
     } else {
-      // Fall back to whatever the active theme specifies
       const t = savedTheme && themes[savedTheme] ? themes[savedTheme] : themes[DEFAULT_THEME] ?? Object.values(themes)[0]
       setCycleIntervalMs(t.cycleIntervalMs)
     }
 
     const savedIdle = localStorage.getItem(LS_IDLE_KEY)
     if (savedIdle) setIdleResetMs(parseInt(savedIdle, 10))
+
+    setAllOverrides(loadAllOverrides())
   }, [themes])
 
   const baseTheme = themes[themeName] ?? themes[themeNames[0]]
 
-  // Apply the user's cycle interval preference on top of the resolved theme
-  const theme = useMemo(
-    () => ({ ...baseTheme, cycleIntervalMs }),
-    [baseTheme, cycleIntervalMs]
-  )
+  const theme = useMemo(() => {
+    const withCycle = { ...baseTheme, cycleIntervalMs }
+    return mergeThemeOverrides(withCycle, allOverrides[themeName] ?? {})
+  }, [baseTheme, cycleIntervalMs, allOverrides, themeName])
+
+  // Apply font override to CSS variable whenever it changes
+  useEffect(() => {
+    if (theme.font && theme.font in fonts) {
+      document.documentElement.style.setProperty(
+        "--font-family",
+        fonts[theme.font as FontId].family
+      )
+    }
+  }, [theme.font])
 
   const handleThemeChange = (name: string) => {
     setThemeName(name)
     localStorage.setItem(LS_THEME_KEY, name)
-    // When switching themes, reset cycle interval to that theme's default
     const newTheme = themes[name]
     if (newTheme) {
       setCycleIntervalMs(newTheme.cycleIntervalMs)
@@ -76,6 +90,35 @@ export function CalendarApp({ themes }: Props) {
     setIdleResetMs(ms)
     if (ms === 0) localStorage.removeItem(LS_IDLE_KEY)
     else localStorage.setItem(LS_IDLE_KEY, String(ms))
+  }
+
+  const handleOverrideChange = (patch: ThemeOverrides) => {
+    setAllOverrides((prev) => {
+      const current = prev[themeName] ?? {}
+      const next: AllThemeOverrides = {
+        ...prev,
+        [themeName]: {
+          ...current,
+          ...patch,
+          calendar: patch.calendar
+            ? { ...(current.calendar ?? {}), ...patch.calendar }
+            : current.calendar,
+        },
+      }
+      saveAllOverrides(next)
+      return next
+    })
+  }
+
+  const handleResetOverrides = () => {
+    setAllOverrides((prev) => {
+      const next = { ...prev }
+      delete next[themeName]
+      saveAllOverrides(next)
+      return next
+    })
+    // Restore server-configured font
+    document.documentElement.style.removeProperty("--font-family")
   }
 
   const handleToggleConnector = (id: string) => {
@@ -111,6 +154,9 @@ export function CalendarApp({ themes }: Props) {
         onCycleIntervalChange={handleCycleIntervalChange}
         idleResetMs={idleResetMs}
         onIdleResetChange={handleIdleResetChange}
+        themeOverrides={allOverrides[themeName] ?? {}}
+        onOverrideChange={handleOverrideChange}
+        onResetOverrides={handleResetOverrides}
       />
     </main>
   )
