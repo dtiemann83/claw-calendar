@@ -17,7 +17,6 @@ import { ColorRow } from "./ColorRow"
 
 interface Props {
   theme: CalendarTheme       // current merged theme (base + overrides)
-  overrides: ThemeOverrides  // just the overrides for the current theme
   onOverrideChange: (patch: ThemeOverrides) => void
   onReset: () => void
 }

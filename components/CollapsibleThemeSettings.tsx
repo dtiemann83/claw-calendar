@@ -21,7 +21,7 @@ interface Props {
 
 export function CollapsibleThemeSettings({
   theme,
-  overrides,
+  overrides: _overrides,
   onOverrideChange,
   onReset,
   drawerBorder,
@@ -76,7 +76,6 @@ export function CollapsibleThemeSettings({
             >
               <ThemeSettingsForm
                 theme={theme}
-                overrides={overrides}
                 onOverrideChange={onOverrideChange}
                 onReset={onReset}
               />
