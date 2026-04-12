@@ -15,7 +15,8 @@
     "drawerBg": "rgba(15, 23, 42, 0.92)",
     "drawerBorder": "rgba(255, 255, 255, 0.12)",
     "toolbarButtonBg": "rgba(255, 255, 255, 0.15)",
-    "toolbarButtonBorder": "rgba(255, 255, 255, 0.25)"
+    "toolbarButtonBorder": "rgba(255, 255, 255, 0.25)",
+    "allDayEventOpacity": 0.08
   },
   "icons": {
     "set": "lucide",

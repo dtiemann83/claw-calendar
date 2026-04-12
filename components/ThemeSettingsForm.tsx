@@ -30,7 +30,9 @@ function parseOverlayOpacity(overlay: string): number {
 
 const FONT_OPTIONS = Object.entries(fonts).map(([id, { label }]) => ({ id, label }))
 
-const COLOR_FIELDS: { key: keyof CalendarTheme["calendar"]; label: string }[] = [
+type StringCalendarKey = { [K in keyof CalendarTheme["calendar"]]: CalendarTheme["calendar"][K] extends string ? K : never }[keyof CalendarTheme["calendar"]]
+
+const COLOR_FIELDS: { key: StringCalendarKey; label: string }[] = [
   { key: "cellBg",             label: "Cell Background" },
   { key: "cellBorder",         label: "Cell Border" },
   { key: "textColor",          label: "Text Color" },
@@ -51,6 +53,10 @@ export function ThemeSettingsForm({ theme, onOverrideChange, onReset }: Props) {
   const handleOverlayChange = (details: { value: number[] }) => {
     const alpha = (details.value[0] / 100).toFixed(2)
     onOverrideChange({ backgroundOverlay: `rgba(0,0,0,${alpha})` })
+  }
+
+  const handleAllDayOpacityChange = (details: { value: number[] }) => {
+    onOverrideChange({ calendar: { allDayEventOpacity: details.value[0] / 100 } })
   }
 
   const handleColorChange = (key: keyof CalendarTheme["calendar"]) => (css: string) => {
@@ -116,6 +122,31 @@ export function ThemeSettingsForm({ theme, onOverrideChange, onReset }: Props) {
           </SliderRoot>
           <span style={{ fontSize: "0.72rem", opacity: 0.5, width: 32, textAlign: "right", flexShrink: 0 }}>
             {overlayOpacity}%
+          </span>
+        </div>
+      </div>
+
+      {/* All-Day Event Opacity */}
+      <div>
+        <div style={subsectionLabelStyle}>All-Day Event Opacity</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <SliderRoot
+            min={0}
+            max={100}
+            step={1}
+            value={[Math.round(theme.calendar.allDayEventOpacity * 100)]}
+            onValueChange={handleAllDayOpacityChange}
+            style={{ flex: 1 }}
+          >
+            <SliderControl>
+              <SliderTrack>
+                <SliderRange />
+              </SliderTrack>
+              <SliderThumb index={0} />
+            </SliderControl>
+          </SliderRoot>
+          <span style={{ fontSize: "0.72rem", opacity: 0.5, width: 32, textAlign: "right", flexShrink: 0 }}>
+            {Math.round(theme.calendar.allDayEventOpacity * 100)}%
           </span>
         </div>
       </div>

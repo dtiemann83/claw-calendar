@@ -18,6 +18,7 @@ export interface CalendarTheme {
     drawerBorder: string
     toolbarButtonBg: string
     toolbarButtonBorder: string
+    allDayEventOpacity: number
   }
   icons: {
     set: string

@@ -8,7 +8,7 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list"
 import iCalendarPlugin from "@fullcalendar/icalendar"
 import interactionPlugin from "@fullcalendar/interaction"
-import type { EventApi, EventClickArg, EventContentArg, DatesSetArg, DayHeaderContentArg } from "@fullcalendar/core"
+import type { EventApi, EventClickArg, EventContentArg, DatesSetArg, DayHeaderContentArg, EventMountArg } from "@fullcalendar/core"
 import type { CalendarTheme } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveEventIcon } from "@/lib/events/icons"
@@ -34,6 +34,7 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
   const [currentView, setCurrentView] = useState("dayGridMonth")
   const [viewOpacity, setViewOpacity] = useState(1)
   const calendarRef = useRef<FullCalendar>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
   // Wrap any navigation action in a fade-out → act → fade-in sequence
   const navigate = useCallback((action: () => void) => {
@@ -190,6 +191,36 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
     [connectors]
   )
 
+  // Background events: FullCalendar applies opacity to the whole element,
+  // making the title faint. Instead, convert the solid color to semi-transparent
+  // rgba and reset opacity to 1 so the title renders at full opacity.
+  const handleEventDidMount = useCallback((info: EventMountArg) => {
+    if (info.event.display !== "background") return
+    const el = info.el as HTMLElement
+    const hex = info.event.backgroundColor
+    const opacity = c.allDayEventOpacity
+    if (/^#[0-9a-f]{6}$/i.test(hex)) {
+      el.dataset.bgHex = hex
+      const r = parseInt(hex.slice(1, 3), 16)
+      const g = parseInt(hex.slice(3, 5), 16)
+      const b = parseInt(hex.slice(5, 7), 16)
+      el.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`
+    }
+    el.style.opacity = "1"
+  }, [c.allDayEventOpacity])
+
+  // Re-apply opacity to already-mounted background events when it changes
+  useEffect(() => {
+    const els = wrapperRef.current?.querySelectorAll<HTMLElement>(".fc-bg-event[data-bg-hex]")
+    els?.forEach((el) => {
+      const hex = el.dataset.bgHex!
+      const r = parseInt(hex.slice(1, 3), 16)
+      const g = parseInt(hex.slice(3, 5), 16)
+      const b = parseInt(hex.slice(5, 7), 16)
+      el.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${c.allDayEventOpacity})`
+    })
+  }, [c.allDayEventOpacity])
+
   return (
     <div
       style={
@@ -207,6 +238,7 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
         } as React.CSSProperties
       }
       className="fc-theme-wrapper"
+      ref={wrapperRef}
     >
       <CalendarToolbar
         title={calendarTitle}
@@ -234,14 +266,21 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
               ? eventSources.filter((s: any) => !hiddenConnectorIds.has(s.id))
               : eventSources
           }
-          allDayText="Day"
+          allDaySlot={false}
           eventDisplay="block"
+          eventDataTransform={(e) => {
+            // iCal plugin communicates all-day via date-only start strings ("YYYY-MM-DD"),
+            // not via e.allDay — FullCalendar derives allDay *after* this transform runs.
+            const isAllDay = typeof e.start === "string" && !e.start.includes("T")
+            return isAllDay ? { ...e, display: "background" } : e
+          }}
           navLinks={true}
           navLinkDayClick={handleNavLinkDayClick}
           eventClick={handleEventClick}
           datesSet={handleDatesSet}
           dayHeaderContent={renderDayHeader}
           eventContent={renderEventContent}
+          eventDidMount={handleEventDidMount}
         />
       </div>
 
