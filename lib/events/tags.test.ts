@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseEventTags, type TagConfig } from "./tags"
+import { parseEventTags, discoverNewTags, type TagConfig } from "./tags"
 
 describe("parseEventTags", () => {
   const configs: TagConfig[] = [
@@ -66,5 +66,59 @@ describe("parseEventTags", () => {
   it("trims extra whitespace from cleanText", () => {
     const result = parseEventTags("  #sports  Basketball  #emma  ", configs)
     expect(result.cleanText).toBe("Basketball")
+  })
+})
+
+describe("discoverNewTags", () => {
+  it("returns new TagConfigs for unknown hashtags", () => {
+    const existing: TagConfig[] = [
+      { name: "sports", type: "category", color: "#22c55e" },
+    ]
+    const descriptions = [
+      "Game #sports #emma",
+      "Doctor visit #medical",
+    ]
+    const newTags = discoverNewTags(descriptions, existing)
+    expect(newTags).toHaveLength(2)
+    expect(newTags[0].name).toBe("emma")
+    expect(newTags[0].type).toBe("category")
+    expect(newTags[1].name).toBe("medical")
+  })
+
+  it("assigns colors from palette based on existing config length", () => {
+    const existing: TagConfig[] = [
+      { name: "sports", type: "category", color: "#22c55e" },
+    ]
+    const descriptions = ["Event #newtag"]
+    const newTags = discoverNewTags(descriptions, existing)
+    // existing has 1 tag, so next palette index is 1 → "#ef4444"
+    expect(newTags[0].color).toBe("#ef4444")
+  })
+
+  it("does not duplicate already-known tags", () => {
+    const existing: TagConfig[] = [
+      { name: "sports", type: "category", color: "#22c55e" },
+    ]
+    const descriptions = ["Game #sports", "Another #sports"]
+    const newTags = discoverNewTags(descriptions, existing)
+    expect(newTags).toHaveLength(0)
+  })
+
+  it("deduplicates across multiple descriptions", () => {
+    const descriptions = ["Event #newtag", "Another #newtag"]
+    const newTags = discoverNewTags(descriptions, [])
+    expect(newTags).toHaveLength(1)
+  })
+
+  it("wraps palette when more tags than colors", () => {
+    const existing: TagConfig[] = Array.from({ length: 10 }, (_, i) => ({
+      name: `tag${i}`,
+      type: "category" as const,
+      color: "#000",
+    }))
+    const descriptions = ["Event #overflow"]
+    const newTags = discoverNewTags(descriptions, existing)
+    // 10 existing → palette index 10 % 10 = 0 → "#22c55e"
+    expect(newTags[0].color).toBe("#22c55e")
   })
 })

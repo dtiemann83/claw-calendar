@@ -48,3 +48,29 @@ export function parseEventTags(
 
   return { categories, who, cleanText }
 }
+
+export function discoverNewTags(
+  descriptions: (string | undefined | null)[],
+  existing: TagConfig[]
+): TagConfig[] {
+  const known = new Set(existing.map((c) => c.name))
+  const seen = new Set<string>()
+  const newTags: TagConfig[] = []
+
+  for (const desc of descriptions) {
+    if (!desc) continue
+    const matches = [...desc.matchAll(TAG_REGEX)]
+    for (const match of matches) {
+      const tag = match[1].toLowerCase()
+      if (known.has(tag) || seen.has(tag)) continue
+      seen.add(tag)
+      newTags.push({
+        name: tag,
+        type: "category",
+        color: DEFAULT_PALETTE[(existing.length + newTags.length) % DEFAULT_PALETTE.length],
+      })
+    }
+  }
+
+  return newTags
+}
