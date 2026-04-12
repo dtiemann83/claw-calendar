@@ -200,12 +200,6 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
         .map((name) => tagConfigs.find((c) => c.name === name && c.type === "who"))
         .filter((c): c is NonNullable<typeof c> => c !== undefined)
 
-      // Apply category color to the FullCalendar event element
-      if (categoryConfig) {
-        arg.event.setProp("backgroundColor", categoryConfig.color)
-        arg.event.setProp("borderColor", categoryConfig.color)
-      }
-
       const hasCustomContent = icon || whoBadges.length > 0
       if (!hasCustomContent) return true
 
@@ -254,6 +248,18 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
     },
     [connectors, tagConfigs]
   )
+
+  const handleEventDidMount = useCallback((arg: { event: EventApi; el: HTMLElement }) => {
+    const description = arg.event.extendedProps?.description as string | undefined
+    const parsed = parseEventTags(description, tagConfigs)
+    const categoryConfig = parsed.categories
+      .map((name) => tagConfigs.find((c) => c.name === name && c.type === "category"))
+      .find((c) => c !== undefined)
+    if (categoryConfig) {
+      arg.el.style.backgroundColor = categoryConfig.color
+      arg.el.style.borderColor = categoryConfig.color
+    }
+  }, [tagConfigs])
 
   // Apply event opacity: convert any solid rgb() background on .fc-event
   // elements to rgba() so the background photo shows through.
@@ -353,6 +359,7 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
           eventsSet={handleEventsSet}
           dayHeaderContent={renderDayHeader}
           eventContent={renderEventContent}
+          eventDidMount={handleEventDidMount}
         />
       </div>
 
