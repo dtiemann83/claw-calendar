@@ -8,7 +8,7 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list"
 import iCalendarPlugin from "@fullcalendar/icalendar"
 import interactionPlugin from "@fullcalendar/interaction"
-import type { EventApi, EventClickArg, EventContentArg, DatesSetArg, DayHeaderContentArg, EventMountArg } from "@fullcalendar/core"
+import type { EventApi, EventClickArg, EventContentArg, DatesSetArg, DayHeaderContentArg } from "@fullcalendar/core"
 import type { CalendarTheme } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import { resolveEventIcon } from "@/lib/events/icons"
@@ -191,34 +191,42 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
     [connectors]
   )
 
-  // Background events: FullCalendar applies opacity to the whole element,
-  // making the title faint. Instead, convert the solid color to semi-transparent
-  // rgba and reset opacity to 1 so the title renders at full opacity.
-  const handleEventDidMount = useCallback((info: EventMountArg) => {
-    if (info.event.display !== "background") return
-    const el = info.el as HTMLElement
-    const hex = info.event.backgroundColor
-    const opacity = c.allDayEventOpacity
-    if (/^#[0-9a-f]{6}$/i.test(hex)) {
-      el.dataset.bgHex = hex
-      const r = parseInt(hex.slice(1, 3), 16)
-      const g = parseInt(hex.slice(3, 5), 16)
-      const b = parseInt(hex.slice(5, 7), 16)
-      el.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`
-    }
-    el.style.opacity = "1"
-  }, [c.allDayEventOpacity])
-
-  // Re-apply opacity to already-mounted background events when it changes
+  // Apply event opacity: convert any solid rgb() background on .fc-event
+  // elements to rgba() so the background photo shows through.
+  // Uses a MutationObserver to catch events as FullCalendar adds them.
   useEffect(() => {
-    const els = wrapperRef.current?.querySelectorAll<HTMLElement>(".fc-bg-event[data-bg-hex]")
-    els?.forEach((el) => {
-      const hex = el.dataset.bgHex!
-      const r = parseInt(hex.slice(1, 3), 16)
-      const g = parseInt(hex.slice(3, 5), 16)
-      const b = parseInt(hex.slice(5, 7), 16)
-      el.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${c.allDayEventOpacity})`
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
+    const opacity = c.allDayEventOpacity
+
+    function applyOpacity(el: HTMLElement) {
+      const bg = el.style.backgroundColor
+      const match = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
+      if (!match) return
+      const [, r, g, b] = match
+      el.dataset.bgRgb = `${r},${g},${b}`
+      el.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`
+      el.style.opacity = "1"
+    }
+
+    // Patch all existing events
+    wrapper.querySelectorAll<HTMLElement>(".fc-event").forEach(applyOpacity)
+
+    // Watch for new events added by FullCalendar
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (!(node instanceof HTMLElement)) continue
+          if (node.classList.contains("fc-event")) {
+            applyOpacity(node)
+          }
+          node.querySelectorAll<HTMLElement>(".fc-event").forEach(applyOpacity)
+        }
+      }
     })
+    observer.observe(wrapper, { childList: true, subtree: true })
+
+    return () => observer.disconnect()
   }, [c.allDayEventOpacity])
 
   return (
@@ -280,7 +288,6 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
           datesSet={handleDatesSet}
           dayHeaderContent={renderDayHeader}
           eventContent={renderEventContent}
-          eventDidMount={handleEventDidMount}
         />
       </div>
 

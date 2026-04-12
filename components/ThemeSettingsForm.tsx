@@ -126,9 +126,9 @@ export function ThemeSettingsForm({ theme, onOverrideChange, onReset }: Props) {
         </div>
       </div>
 
-      {/* All-Day Event Opacity */}
+      {/* Event Opacity */}
       <div>
-        <div style={subsectionLabelStyle}>All-Day Event Opacity</div>
+        <div style={subsectionLabelStyle}>Event Opacity</div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <SliderRoot
             min={0}
