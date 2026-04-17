@@ -77,4 +77,42 @@ describe("parseRecipient", () => {
       matchedAddress: "school@tiemannfamily.us",
     })
   })
+
+  it("strips a display name with angle brackets", () => {
+    expect(
+      parseRecipient('"School" <school+james@tiemannfamily.us>', CONFIG)
+    ).toEqual({
+      domainTag: "school",
+      subTag: "james",
+      subTagKnown: true,
+      matchedAddress: "school@tiemannfamily.us",
+    })
+  })
+
+  it("picks the first configured route when multiple addresses are present", () => {
+    expect(
+      parseRecipient(
+        "Nobody <nobody@example.com>, School <school@tiemannfamily.us>",
+        CONFIG
+      )
+    ).toMatchObject({ domainTag: "school", matchedAddress: "school@tiemannfamily.us" })
+  })
+
+  it("falls back to config.fallback for unconfigured addresses", () => {
+    expect(parseRecipient("billing@tiemannfamily.us", CONFIG)).toEqual({
+      domainTag: "general",
+      subTag: null,
+      subTagKnown: true,
+      matchedAddress: null,
+    })
+  })
+
+  it("falls back when the input has no @ sign at all", () => {
+    expect(parseRecipient("not-an-email", CONFIG)).toEqual({
+      domainTag: "general",
+      subTag: null,
+      subTagKnown: true,
+      matchedAddress: null,
+    })
+  })
 })
