@@ -44,11 +44,14 @@ class ConnectionManager:
 
     async def broadcast(self, message: dict):
         data = json.dumps(message)
+        dead: list[WebSocket] = []
         for client in list(self._clients):
             try:
                 await client.send_text(data)
             except Exception:
-                pass
+                dead.append(client)
+        for client in dead:
+            self.disconnect(client)
 
 
 manager = ConnectionManager()
