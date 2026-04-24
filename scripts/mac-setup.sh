@@ -79,6 +79,12 @@ print_success "Node.js $NODE_FULL is available"
 print_header "Verifying Python 3.11"
 
 PYTHON_VERSION=$(/opt/local/bin/python3 --version 2>&1 | awk '{print $2}')
+
+if ! echo "$PYTHON_VERSION" | grep -q "^3\.11"; then
+    print_error "Python 3.11 required, found: $PYTHON_VERSION"
+    exit 1
+fi
+
 print_success "Python $PYTHON_VERSION is available"
 
 # ============================================================================
@@ -127,29 +133,42 @@ else
 fi
 
 # ============================================================================
-# 9. Print launchd installation instructions
+# 9. Install launchd plists with patched log paths
 # ============================================================================
-print_header "LaunchAgent installation instructions"
+print_header "Installing launchd plists"
 
-echo "To install the launchd service plists:"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLIST_SRC="$SCRIPT_DIR/launchd"
+LOG_DIR="$HOME/Library/Logs"
+mkdir -p "$LOG_DIR"
+
+# Copy and patch audio-server plist
+sed \
+    -e "s|/tmp/claw-audio-server\.log|$LOG_DIR/claw-audio-server.log|g" \
+    -e "s|/tmp/claw-audio-server\.error\.log|$LOG_DIR/claw-audio-server.error.log|g" \
+    "$PLIST_SRC/com.family.voice.audio-server.plist" \
+    > "$LAUNCH_AGENTS_DIR/com.family.voice.audio-server.plist"
+print_success "Installed com.family.voice.audio-server.plist (logs → $LOG_DIR)"
+
+# Copy and patch web plist
+sed \
+    -e "s|/tmp/claw-web\.log|$LOG_DIR/claw-web.log|g" \
+    -e "s|/tmp/claw-web\.error\.log|$LOG_DIR/claw-web.error.log|g" \
+    "$PLIST_SRC/com.family.voice.web.plist" \
+    > "$LAUNCH_AGENTS_DIR/com.family.voice.web.plist"
+print_success "Installed com.family.voice.web.plist (logs → $LOG_DIR)"
+
 echo ""
-echo "1. Review and customize the plist files in ./scripts/launchd/"
-echo "   - Update WorkingDirectory paths to match your setup"
-echo "   - Customize log file locations if desired"
+echo "To load the services:"
+echo "   launchctl load $LAUNCH_AGENTS_DIR/com.family.voice.audio-server.plist"
+echo "   launchctl load $LAUNCH_AGENTS_DIR/com.family.voice.web.plist"
 echo ""
-echo "2. Copy the plists to LaunchAgents:"
-echo "   cp ./scripts/launchd/com.family.voice.*.plist ~/Library/LaunchAgents/"
-echo ""
-echo "3. Load the services:"
-echo "   launchctl load ~/Library/LaunchAgents/com.family.voice.audio-server.plist"
-echo "   launchctl load ~/Library/LaunchAgents/com.family.voice.web.plist"
-echo ""
-echo "4. Check status:"
+echo "To check status:"
 echo "   launchctl list | grep com.family.voice"
 echo ""
-echo "5. View logs:"
-echo "   tail -f ~/Library/Logs/claw-audio-server.log"
-echo "   tail -f ~/Library/Logs/claw-web.log"
+echo "To view logs:"
+echo "   tail -f $LOG_DIR/claw-audio-server.log"
+echo "   tail -f $LOG_DIR/claw-web.log"
 
 # ============================================================================
 # 10. Make setup script executable

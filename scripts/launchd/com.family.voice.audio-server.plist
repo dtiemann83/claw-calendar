@@ -20,9 +20,9 @@
 	<key>RunAtLoad</key>
 	<true/>
 	<key>StandardOutPath</key>
-	<string>/Users/Shared/Library/Logs/claw-audio-server.log</string>
+	<string>/tmp/claw-audio-server.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/Shared/Library/Logs/claw-audio-server.error.log</string>
+	<string>/tmp/claw-audio-server.error.log</string>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>

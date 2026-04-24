@@ -17,9 +17,9 @@
 	<key>RunAtLoad</key>
 	<true/>
 	<key>StandardOutPath</key>
-	<string>/Users/Shared/Library/Logs/claw-web.log</string>
+	<string>/tmp/claw-web.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/Shared/Library/Logs/claw-web.error.log</string>
+	<string>/tmp/claw-web.error.log</string>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>
