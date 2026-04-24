@@ -3,6 +3,7 @@ from httpx import AsyncClient, ASGITransport
 from claw_audio_server.main import app
 
 
+@pytest.mark.asyncio
 async def test_healthz():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.get("/healthz")
@@ -10,12 +11,14 @@ async def test_healthz():
     assert resp.json()["status"] == "ok"
 
 
+@pytest.mark.asyncio
 async def test_stt_stub_empty_returns_400():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.post("/stt", files={"file": ("test.wav", b"", "audio/wav")})
     assert resp.status_code == 400
 
 
+@pytest.mark.asyncio
 async def test_stt_stub_returns_transcript():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.post(
@@ -26,14 +29,18 @@ async def test_stt_stub_returns_transcript():
     assert "transcript" in resp.json()
 
 
+@pytest.mark.asyncio
 async def test_tts_stub_empty_returns_400():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.post("/tts", json={"text": "  "})
     assert resp.status_code == 400
 
 
+@pytest.mark.asyncio
 async def test_tts_stub_returns_audio():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.post("/tts", json={"text": "Hello world"})
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "audio/wav"
+    assert len(resp.content) > 0
+    assert resp.content[:4] == b"RIFF"
