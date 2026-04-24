@@ -9,6 +9,7 @@ module.exports = {
         OPENCLAW_BIN: "/Users/dtiemann/.nvm/versions/node/v22.22.2/bin/openclaw",
         OPENCLAW_AGENT_ID: "main",
         AUDIO_SERVER_URL: "http://127.0.0.1:3010",
+        NEXT_PUBLIC_AUDIO_SERVER_WS_URL: "ws://danas.mac.mini.lan:3010/ws",
       },
     },
     {
@@ -19,7 +20,9 @@ module.exports = {
       env: {
         STT_PROVIDER: "faster_whisper_local",
         TTS_PROVIDER: "apple_say",
-        WAKE_WORD_PROVIDER: "stub",
+        WAKE_WORD_PROVIDER: "open_wake_word",
+        WAKE_WORD_MODEL: "hey_jarvis_v0.1",
+        WAKE_WORD_THRESHOLD: "0.5",
         SPEAKER_ID_PROVIDER: "stub",
         WHISPER_MODEL: "tiny.en",
         WHISPER_DEVICE: "cpu",
