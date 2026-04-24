@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { text, speakerUserId, sessionId } = await req.json();
+  let text: string | undefined;
+  let speakerUserId: string | undefined;
+  let sessionId: string | undefined;
+  try {
+    const body = await req.json();
+    text = body.text;
+    speakerUserId = body.speakerUserId;
+    sessionId = body.sessionId;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
   if (!text?.trim()) {
     return NextResponse.json({ error: "No text" }, { status: 400 });
   }
@@ -19,6 +30,8 @@ export async function POST(req: NextRequest) {
   });
 
   if (!upstream.ok) {
+    const reason = await upstream.text().catch(() => "");
+    console.error(`[agent/message] Gateway error ${upstream.status}: ${reason}`);
     return NextResponse.json({ error: "Agent error" }, { status: 502 });
   }
 

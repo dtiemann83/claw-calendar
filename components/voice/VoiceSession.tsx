@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Mic, MicOff, Volume2, Loader2 } from "lucide-react";
 
 type Message = {
@@ -17,6 +17,13 @@ export function VoiceSession() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const sessionId = useRef(crypto.randomUUID());
+  const audioUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      mediaRecorderRef.current?.stop();
+    };
+  }, []);
 
   const startRecording = useCallback(async () => {
     setErrorMsg(null);
@@ -94,16 +101,25 @@ export function VoiceSession() {
       if (speakRes.ok) {
         const audioBlob = await speakRes.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
+        audioUrlRef.current = audioUrl;
         const audio = new Audio(audioUrl);
         audio.onended = () => {
           URL.revokeObjectURL(audioUrl);
+          audioUrlRef.current = null;
           setState("idle");
         };
         audio.onerror = () => {
           URL.revokeObjectURL(audioUrl);
+          audioUrlRef.current = null;
           setState("idle");
         };
-        await audio.play();
+        try {
+          await audio.play();
+        } catch {
+          URL.revokeObjectURL(audioUrl);
+          audioUrlRef.current = null;
+          setState("idle");
+        }
       } else {
         setState("idle");
       }

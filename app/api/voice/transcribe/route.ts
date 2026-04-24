@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
   });
 
   if (!upstream.ok) {
+    const reason = await upstream.text().catch(() => "");
+    console.error(`[voice/transcribe] STT error ${upstream.status}: ${reason}`);
     return NextResponse.json({ error: "STT failed" }, { status: 502 });
   }
 
