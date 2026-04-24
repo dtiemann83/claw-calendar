@@ -1,12 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { promisify } from "util";
 
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+const execFileMock = vi.fn();
+// Give the mock the promisify.custom symbol so promisify(execFile)
+// resolves with { stdout, stderr } matching Node's real execFile behavior.
+const execFileCustomMock = vi.fn();
+(execFileMock as any)[promisify.custom] = execFileCustomMock;
+
+vi.mock("child_process", () => ({ execFile: execFileMock }));
 
 describe("POST /api/agent/message", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.OPENCLAW_GATEWAY_URL = "http://localhost:18789";
+    vi.resetModules();
+    process.env.OPENCLAW_BIN = "/usr/bin/openclaw";
+    process.env.OPENCLAW_AGENT_ID = "main";
   });
 
   it("returns 400 when no text provided", async () => {
@@ -20,10 +28,10 @@ describe("POST /api/agent/message", () => {
     expect(res.status).toBe(400);
   });
 
-  it("calls OpenClaw gateway and returns response", async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ text: "The weather is sunny" }),
+  it("calls openclaw CLI and returns response", async () => {
+    execFileCustomMock.mockResolvedValue({
+      stdout: "",
+      stderr: JSON.stringify({ payloads: [{ text: "The weather is sunny" }] }),
     });
 
     const { POST } = await import("./route");
@@ -34,7 +42,6 @@ describe("POST /api/agent/message", () => {
     });
     const res = await POST(req as any);
     expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body).toMatchObject({ text: "The weather is sunny" });
+    expect(await res.json()).toMatchObject({ text: "The weather is sunny" });
   });
 });
