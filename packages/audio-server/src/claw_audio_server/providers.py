@@ -3,6 +3,7 @@ import os
 from .stt.base import STTProvider
 from .tts.base import TTSProvider
 from .wake_word.base import WakeWordProvider
+from .speaker_id.base import SpeakerIDProvider
 
 
 def get_provider_names() -> dict[str, str]:
@@ -51,3 +52,14 @@ def get_tts_provider() -> TTSProvider:
         from .tts.apple_say import AppleSayTTSProvider
         return AppleSayTTSProvider()
     raise ValueError(f"Unknown TTS provider: {name}")
+
+
+def get_speaker_id_provider() -> SpeakerIDProvider:
+    name = os.getenv("SPEAKER_ID_PROVIDER", "stub")
+    if name == "stub":
+        from .speaker_id.stub import StubSpeakerIDProvider
+        return StubSpeakerIDProvider()
+    if name == "resemblyzer":
+        from .speaker_id.resemblyzer import ResemblyzerSpeakerIDProvider
+        return ResemblyzerSpeakerIDProvider()
+    raise ValueError(f"Unknown speaker ID provider: {name}")

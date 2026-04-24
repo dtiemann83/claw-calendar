@@ -1,11 +1,13 @@
 from fastapi import FastAPI, UploadFile, HTTPException, WebSocket
 from fastapi.responses import Response
 from pydantic import BaseModel
-from .providers import get_provider_names, get_stt_provider, get_tts_provider, get_wake_word_provider
+from .providers import get_provider_names, get_stt_provider, get_tts_provider, get_wake_word_provider, get_speaker_id_provider
 import asyncio
 import json
+import os
 import time
 import numpy as np
+from pathlib import Path
 from scipy.signal import resample_poly
 from math import gcd
 
@@ -62,16 +64,69 @@ async def healthz():
     return {"status": "ok", "providers": get_provider_names()}
 
 
+class IdentifyResponse(BaseModel):
+    user_id: str | None
+    confidence: float | None
+
+
+class STTResponse(BaseModel):
+    transcript: str
+    speaker: IdentifyResponse | None = None
+
+
+class EnrollResponse(BaseModel):
+    user_id: str
+    sample_count: int
+
+
 @app.post("/stt")
-async def stt(file: UploadFile) -> dict:
+async def stt(file: UploadFile) -> STTResponse:
     """Transcribe uploaded audio. Accepts any audio format the provider supports."""
     audio_bytes = await file.read()
     if not audio_bytes:
         raise HTTPException(status_code=400, detail="Empty audio")
-    provider = get_stt_provider()
+    stt_provider = get_stt_provider()
     # Default to 16000 Hz — providers that need the actual rate should parse it from the audio
-    transcript = await provider.transcribe(audio_bytes, sample_rate=16000)
-    return {"transcript": transcript}
+    transcript = await stt_provider.transcribe(audio_bytes, sample_rate=16000)
+
+    # Optionally run speaker ID concurrently
+    speaker = None
+    if os.getenv("SPEAKER_ID_PROVIDER", "stub") != "stub":
+        sid_provider = get_speaker_id_provider()
+        match = await sid_provider.identify(audio_bytes)
+        if match:
+            speaker = IdentifyResponse(user_id=match.user_id, confidence=match.confidence)
+
+    return STTResponse(transcript=transcript, speaker=speaker)
+
+
+@app.post("/enroll")
+async def enroll(user_id: str, file: UploadFile) -> EnrollResponse:
+    """Enroll a voice sample for a user. Call 3+ times for good accuracy."""
+    audio_bytes = await file.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Empty audio")
+    provider = get_speaker_id_provider()
+    await provider.enroll(user_id, [audio_bytes])
+    # Count how many samples this user now has
+    embeddings_dir = Path(os.getenv("SPEAKER_EMBEDDINGS_DIR",
+                          os.path.expanduser("~/.config/claw-calendar/speaker_embeddings")))
+    npy_path = embeddings_dir / f"{user_id}.npy"
+    sample_count = len(np.load(str(npy_path))) if npy_path.exists() else 0
+    return EnrollResponse(user_id=user_id, sample_count=sample_count)
+
+
+@app.post("/identify")
+async def identify(file: UploadFile) -> IdentifyResponse:
+    """Identify speaker from audio clip."""
+    audio_bytes = await file.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Empty audio")
+    provider = get_speaker_id_provider()
+    match = await provider.identify(audio_bytes)
+    if match is None:
+        return IdentifyResponse(user_id=None, confidence=None)
+    return IdentifyResponse(user_id=match.user_id, confidence=match.confidence)
 
 
 class SynthesizeRequest(BaseModel):
