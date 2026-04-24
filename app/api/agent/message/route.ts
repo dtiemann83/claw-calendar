@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { execFile } from "child_process";
+import { promisify } from "util";
+
+const execFileAsync = promisify(execFile);
 
 export async function POST(req: NextRequest) {
   let text: string | undefined;
-  let speakerUserId: string | undefined;
-  let sessionId: string | undefined;
   try {
     const body = await req.json();
     text = body.text;
-    speakerUserId = body.speakerUserId;
-    sessionId = body.sessionId;
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
@@ -17,23 +17,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No text" }, { status: 400 });
   }
 
-  const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL ?? "http://127.0.0.1:18789";
-  const upstream = await fetch(`${gatewayUrl}/api/message`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text,
-      channel: "family-voice",
-      senderId: speakerUserId ?? "guest",
-      context: { sessionId },
-    }),
-  });
+  const agentId = process.env.OPENCLAW_AGENT_ID ?? "main";
+  const openclaw = process.env.OPENCLAW_BIN ?? "openclaw";
 
-  if (!upstream.ok) {
-    const reason = await upstream.text().catch(() => "");
-    console.error(`[agent/message] Gateway error ${upstream.status}: ${reason}`);
+  try {
+    const { stdout } = await execFileAsync(
+      openclaw,
+      ["agent", "--agent", agentId, "--local", "--json", "-m", text],
+      { timeout: 60_000 }
+    );
+    const data = JSON.parse(stdout);
+    const reply = data?.payloads?.[0]?.text ?? "";
+    if (!reply) {
+      console.error("[agent/message] Empty reply from openclaw:", stdout.slice(0, 200));
+      return NextResponse.json({ error: "Empty agent reply" }, { status: 502 });
+    }
+    return NextResponse.json({ text: reply });
+  } catch (err) {
+    console.error("[agent/message] openclaw error:", err);
     return NextResponse.json({ error: "Agent error" }, { status: 502 });
   }
-
-  return NextResponse.json(await upstream.json());
 }
