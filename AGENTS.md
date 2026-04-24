@@ -17,7 +17,9 @@ Provider selection is env-driven — see providers.py in the audio server.
 - `WAKE_WORD_PROVIDER` — `open_wake_word` | `stub`
 - `WAKE_WORD_MODEL` — openWakeWord model name (default: `hey_jarvis_v0.1`)
 - `WAKE_WORD_THRESHOLD` — detection threshold 0–1 (default: `0.5`)
-- `SPEAKER_ID_PROVIDER` — `stub` (Phase 3)
+- `SPEAKER_ID_PROVIDER` — `resemblyzer` | `stub`
+- `SPEAKER_ID_THRESHOLD` — cosine similarity threshold 0–1 (default: `0.75`)
+- `SPEAKER_EMBEDDINGS_DIR` — path to .npy embeddings (default: `~/.config/claw-calendar/speaker_embeddings/`)
 
 ### Next.js environment variables
 - `AUDIO_SERVER_URL` — server-side HTTP URL for audio service (e.g. `http://127.0.0.1:3010`)

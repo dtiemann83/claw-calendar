@@ -30,15 +30,20 @@ class ResemblyzerSpeakerIDProvider:
         wav = preprocess_wav(samples, source_sr=self.SAMPLE_RATE)
         return self._encoder.embed_utterance(wav)
 
+    @staticmethod
+    def _safe_filename(user_id: str) -> str:
+        """Strip directory components so user_id can't escape SPEAKER_EMBEDDINGS_DIR."""
+        return Path(user_id).name
+
     def _load_embeddings(self, user_id: str) -> np.ndarray | None:
         """Load stored embeddings for a user. Returns (N, 256) array or None."""
-        path = self._dir / f"{user_id}.npy"
+        path = self._dir / f"{self._safe_filename(user_id)}.npy"
         if not path.exists():
             return None
         return np.load(str(path))
 
     def _save_embeddings(self, user_id: str, embeddings: np.ndarray) -> None:
-        np.save(str(self._dir / f"{user_id}.npy"), embeddings)
+        np.save(str(self._dir / f"{self._safe_filename(user_id)}.npy"), embeddings)
 
     def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
         return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-8))
