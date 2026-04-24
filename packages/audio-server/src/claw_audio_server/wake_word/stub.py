@@ -7,3 +7,6 @@ class StubWakeWordProvider:
 
     async def stop(self) -> None:
         pass
+
+    def process_chunk(self, audio: bytes) -> bool:
+        return False

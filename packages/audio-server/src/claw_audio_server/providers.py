@@ -2,6 +2,7 @@ import os
 
 from .stt.base import STTProvider
 from .tts.base import TTSProvider
+from .wake_word.base import WakeWordProvider
 
 
 def get_provider_names() -> dict[str, str]:
@@ -11,6 +12,17 @@ def get_provider_names() -> dict[str, str]:
         "tts": os.getenv("TTS_PROVIDER", "stub"),
         "speaker_id": os.getenv("SPEAKER_ID_PROVIDER", "stub"),
     }
+
+
+def get_wake_word_provider() -> WakeWordProvider:
+    name = os.getenv("WAKE_WORD_PROVIDER", "stub")
+    if name == "stub":
+        from .wake_word.stub import StubWakeWordProvider
+        return StubWakeWordProvider()
+    if name == "open_wake_word":
+        from .wake_word.open_wake_word import OpenWakeWordProvider
+        return OpenWakeWordProvider()
+    raise ValueError(f"Unknown wake word provider: {name}")
 
 
 def get_stt_provider() -> STTProvider:
