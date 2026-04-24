@@ -21,6 +21,9 @@ def get_stt_provider() -> STTProvider:
     if name == "openai_whisper_api":
         from .stt.openai_whisper_api import OpenAIWhisperSTTProvider
         return OpenAIWhisperSTTProvider()
+    if name == "faster_whisper_local":
+        from .stt.faster_whisper_local import FasterWhisperLocalSTTProvider
+        return FasterWhisperLocalSTTProvider()
     raise ValueError(f"Unknown STT provider: {name}")
 
 
