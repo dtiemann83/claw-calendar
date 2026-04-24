@@ -2,6 +2,9 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Mic, MicOff, Volume2, Loader2 } from "lucide-react";
+import { useAudioServerWS } from "@/hooks/useAudioServerWS";
+import { useWakeWordStream } from "@/hooks/useWakeWordStream";
+import { WakeWordIndicator } from "./WakeWordIndicator";
 
 type Message = {
   role: "user" | "assistant";
@@ -14,10 +17,15 @@ export function VoiceSession() {
   const [state, setState] = useState<VoiceState>("idle");
   const [messages, setMessages] = useState<Message[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [wakeDetected, setWakeDetected] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const sessionId = useRef(crypto.randomUUID());
   const audioUrlRef = useRef<string | null>(null);
+
+  const { lastEvent, wsState, sendAudioChunk } = useAudioServerWS();
+  const streamingEnabled = wsState === "open" && state === "idle";
+  useWakeWordStream(streamingEnabled, sendAudioChunk);
 
   useEffect(() => {
     return () => {
@@ -55,6 +63,17 @@ export function VoiceSession() {
     mediaRecorderRef.current?.stop();
     mediaRecorderRef.current = null;
   }, []);
+
+  useEffect(() => {
+    if (lastEvent?.type === "wake" && state === "idle") {
+      setWakeDetected(true);
+      // Brief visual flash, then start recording
+      setTimeout(() => {
+        setWakeDetected(false);
+        startRecording();
+      }, 500);
+    }
+  }, [lastEvent, state, startRecording]);
 
   const processAudio = async (blob: Blob) => {
     setState("thinking");
@@ -170,6 +189,9 @@ export function VoiceSession() {
 
       {/* State label */}
       <p className="text-sm font-medium text-gray-600">{stateLabels[state]}</p>
+
+      {/* Wake word indicator */}
+      <WakeWordIndicator wsState={wsState} wakeDetected={wakeDetected} />
 
       {/* Error */}
       {errorMsg && (
