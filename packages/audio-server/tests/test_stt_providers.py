@@ -10,10 +10,14 @@ async def test_openai_whisper_transcribes():
     fake_response.json.return_value = {"text": "hello world"}
     fake_response.raise_for_status = MagicMock()
 
-    with patch("httpx.AsyncClient") as mock_client_class:
-        mock_client = AsyncMock()
-        mock_client_class.return_value.__aenter__.return_value = mock_client
-        mock_client.post = AsyncMock(return_value=fake_response)
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=fake_response)
+
+    with patch("claw_audio_server.stt.openai_whisper_api.httpx.AsyncClient") as mock_client_class:
+        instance = MagicMock()
+        instance.__aenter__ = AsyncMock(return_value=mock_client)
+        instance.__aexit__ = AsyncMock(return_value=False)
+        mock_client_class.return_value = instance
 
         with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
             provider = OpenAIWhisperSTTProvider()
