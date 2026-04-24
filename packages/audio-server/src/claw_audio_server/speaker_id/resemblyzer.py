@@ -15,11 +15,11 @@ EMBEDDINGS_DIR_DEFAULT = os.path.expanduser("~/.config/claw-calendar/speaker_emb
 
 class ResemblyzerSpeakerIDProvider:
     SAMPLE_RATE = 16000
-    CONFIDENCE_THRESHOLD = float(os.getenv("SPEAKER_ID_THRESHOLD", "0.75"))
 
     def __init__(self) -> None:
         from resemblyzer import VoiceEncoder
         self._encoder = VoiceEncoder("cpu")
+        self._threshold = float(os.getenv("SPEAKER_ID_THRESHOLD", "0.75"))
         self._dir = Path(os.getenv("SPEAKER_EMBEDDINGS_DIR", EMBEDDINGS_DIR_DEFAULT))
         self._dir.mkdir(parents=True, exist_ok=True)
 
@@ -67,7 +67,7 @@ class ResemblyzerSpeakerIDProvider:
             stored = np.load(str(npy_file))
             mean_emb = stored.mean(axis=0) if stored.ndim == 2 else stored
             similarity = self._cosine_similarity(query_emb, mean_emb)
-            if similarity >= self.CONFIDENCE_THRESHOLD:
+            if similarity >= self._threshold:
                 if best_match is None or similarity > best_match.confidence:
                     best_match = SpeakerMatch(user_id=user_id, confidence=similarity)
 

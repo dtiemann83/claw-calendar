@@ -20,7 +20,8 @@ async def test_stub_enroll_no_error():
     await provider.enroll("user1", [b"\x00" * 1000, b"\x00" * 1000])
 
 
-def test_resemblyzer_enroll_and_identify():
+@pytest.mark.asyncio
+async def test_resemblyzer_enroll_and_identify():
     """End-to-end: enroll a user and identify them (uses a temp dir)."""
     mock_encoder = MagicMock()
     # Give both enroll and identify the same embedding so similarity = 1.0
@@ -47,19 +48,14 @@ def test_resemblyzer_enroll_and_identify():
                 importlib.reload(mod)
                 provider = mod.ResemblyzerSpeakerIDProvider()
 
-        import asyncio
         audio = np.zeros(32000, dtype=np.int16).tobytes()
-
-        async def run():
-            await provider.enroll("alice", [audio])
-            npy_path = Path(tmpdir) / "alice.npy"
-            assert npy_path.exists()
-            match = await provider.identify(audio)
-            assert match is not None
-            assert match.user_id == "alice"
-            assert match.confidence >= 0.5
-
-        asyncio.run(run())
+        await provider.enroll("alice", [audio])
+        npy_path = Path(tmpdir) / "alice.npy"
+        assert npy_path.exists()
+        match = await provider.identify(audio)
+        assert match is not None
+        assert match.user_id == "alice"
+        assert match.confidence >= 0.5
 
 
 def test_get_speaker_id_provider_stub():
