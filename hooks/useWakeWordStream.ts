@@ -41,7 +41,7 @@ export function useWakeWordStream(
         workletNodeRef.current = worklet;
 
         worklet.port.onmessage = (e) => {
-          sendAudioChunk((e.data as Int16Array).buffer);
+          sendAudioChunk((e.data as Int16Array).buffer as ArrayBuffer);
         };
 
         source.connect(worklet);
