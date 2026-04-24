@@ -1,5 +1,7 @@
 import fs from "fs"
-import type { ConnectorConfig, AgentApiConnector, IcalUrlConnector, LocalFileConnector } from "./types"
+import { CalendarClient } from "@claw/calendar-core"
+import type { ConnectorConfig, AgentApiConnector, IcalUrlConnector, LocalFileConnector, CaldavConnector } from "./types"
+import { toHttpUrl } from "./providers/ical-url"
 
 async function fingerprintAgentApi(config: AgentApiConnector): Promise<string> {
   const base = config.baseUrl.replace(/\/$/, "")
@@ -11,16 +13,17 @@ async function fingerprintAgentApi(config: AgentApiConnector): Promise<string> {
 }
 
 async function fingerprintIcalUrl(config: IcalUrlConnector): Promise<string> {
+  const url = toHttpUrl(config.url)
   // Prefer HEAD + ETag/Last-Modified to avoid downloading the whole file
   try {
-    const head = await fetch(config.url, { method: "HEAD", cache: "no-store" })
+    const head = await fetch(url, { method: "HEAD", cache: "no-store" })
     const etag = head.headers.get("etag")
     const modified = head.headers.get("last-modified")
     if (etag || modified) return `${etag ?? ""}|${modified ?? ""}`
   } catch {
     // HEAD not supported — fall through to GET
   }
-  const get = await fetch(config.url, { cache: "no-store" })
+  const get = await fetch(url, { cache: "no-store" })
   if (!get.ok) return ""
   const text = await get.text()
   // Simple djb2 hash — good enough for change detection
@@ -38,6 +41,15 @@ function fingerprintLocalFile(config: LocalFileConnector): string {
   }
 }
 
+async function fingerprintCaldav(config: CaldavConnector): Promise<string> {
+  try {
+    const client = new CalendarClient({ calendarName: config.calendarName })
+    return await client.ctag()
+  } catch {
+    return ""
+  }
+}
+
 export async function getFingerprint(config: ConnectorConfig): Promise<string> {
   switch (config.type) {
     case "agent-api":
@@ -46,6 +58,8 @@ export async function getFingerprint(config: ConnectorConfig): Promise<string> {
       return fingerprintIcalUrl(config)
     case "local-file":
       return fingerprintLocalFile(config)
+    case "caldav":
+      return fingerprintCaldav(config)
     default: {
       const _exhaustive: never = config
       return ""

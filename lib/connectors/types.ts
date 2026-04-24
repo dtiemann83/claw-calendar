@@ -22,10 +22,17 @@ export interface LocalFileConnector extends ConnectorBase {
   path: string
 }
 
+export interface CaldavConnector extends ConnectorBase {
+  type: "caldav"
+  /** Display name of the calendar in the iCloud account (e.g. "Family") */
+  calendarName: string
+}
+
 export type ConnectorConfig =
   | AgentApiConnector
   | IcalUrlConnector
   | LocalFileConnector
+  | CaldavConnector
 
 export interface CalendarConfig {
   connectors: ConnectorConfig[]

@@ -29,6 +29,8 @@ interface Props {
 
 const FADE_MS = 160
 
+type LoadState = "loading" | "ready" | "error"
+
 export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnectorsLoaded, idleResetMs, tagConfigs, onTagConfigsChange }: Props) {
   const { calendar: c } = theme
   const [connectors, setConnectors] = useState<ConnectorMeta[]>([])
@@ -37,6 +39,8 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
   const [calendarTitle, setCalendarTitle] = useState("")
   const [currentView, setCurrentView] = useState("dayGridMonth")
   const [viewOpacity, setViewOpacity] = useState(1)
+  const [loadState, setLoadState] = useState<LoadState>("loading")
+  const [errorMessage, setErrorMessage] = useState<string>("")
   const calendarRef = useRef<FullCalendar>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -54,7 +58,7 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
   useEffect(() => {
     fetch("/api/connectors")
       .then((res) => {
-        if (!res.ok) throw new Error(`/api/connectors returned ${res.status}`)
+        if (!res.ok) throw new Error(`Failed to load calendars (${res.status})`)
         return res.json() as Promise<ConnectorMeta[]>
       })
       .then((data) => {
@@ -69,9 +73,12 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
             borderColor: conn.color,
           }))
         )
+        // Stay in "loading" state until FullCalendar fires its first loading=false
       })
       .catch((err) => {
         console.error("Failed to load calendar connectors:", err)
+        setErrorMessage(err instanceof Error ? err.message : "Failed to load calendars")
+        setLoadState("error")
       })
   }, [])
 
@@ -244,6 +251,17 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
     [connectors, tagConfigs]
   )
 
+  const handleLoading = useCallback((isLoading: boolean) => {
+    if (!isLoading) setLoadState("ready")
+  }, [])
+
+  const handleEventSourceFailure = useCallback((err: unknown) => {
+    console.error("Event source failed:", err)
+    const msg = err instanceof Error ? err.message : "Failed to load calendar events"
+    setErrorMessage(msg)
+    setLoadState("error")
+  }, [])
+
   const handleEventDidMount = useCallback((arg: { event: EventApi; el: HTMLElement }) => {
     const description = arg.event.extendedProps?.description as string | undefined
     const parsed = parseEventTags(description, tagConfigs)
@@ -295,6 +313,69 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
   }, [c.allDayEventOpacity])
 
   return (
+    <>
+      {loadState === "loading" && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+          zIndex: 9999,
+        }}>
+          <div style={{
+            background: "rgba(0,0,0,0.6)",
+            borderRadius: "12px",
+            padding: "16px 40px",
+          }}>
+            <span style={{
+              fontSize: "1.1rem",
+              fontWeight: 600,
+              letterSpacing: "0.04em",
+              background: "linear-gradient(90deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,1) 40%, rgba(255,255,255,0.45) 80%)",
+              backgroundSize: "200% auto",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              animation: "shimmer 1.8s linear infinite",
+              display: "inline-block",
+            }}>
+              Loading Calendar...
+            </span>
+          </div>
+        </div>
+      )}
+
+      {loadState === "error" && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+          zIndex: 9999,
+        }}>
+          <div style={{
+            background: "rgba(0,0,0,0.65)",
+            borderRadius: "12px",
+            padding: "16px 40px",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: "1.3rem", marginBottom: "6px" }}>⚠️</div>
+            <div style={{ color: "#fff", fontWeight: 600, fontSize: "1rem", marginBottom: "4px" }}>
+              Calendar failed to load
+            </div>
+            {errorMessage && (
+              <div style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.8rem" }}>
+                {errorMessage}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     <div
       style={
         {
@@ -355,6 +436,8 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
           dayHeaderContent={renderDayHeader}
           eventContent={renderEventContent}
           eventDidMount={handleEventDidMount}
+          loading={handleLoading}
+          eventSourceFailure={handleEventSourceFailure}
         />
       </div>
 
@@ -365,5 +448,6 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
         connectors={connectors}
       />
     </div>
+    </>
   )
 }

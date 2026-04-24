@@ -2,6 +2,9 @@
   "name": "claw-calendar",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,6 +14,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@claw/calendar-core": "*",
     "@chakra-ui/react": "^3.34.0",
     "@emotion/react": "^11.14.0",
     "@fontsource-variable/geist": "^5.2.8",
@@ -29,6 +33,7 @@
     "ical.js": "^1.4.0",
     "lucide-react": "^1.7.0",
     "next": "16.2.2",
+    "node-ical": "^0.26.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

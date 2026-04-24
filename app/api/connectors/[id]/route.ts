@@ -1,5 +1,6 @@
 import { findConnectorById } from "@/lib/connectors/registry"
 import { dispatchFetchIcal } from "@/lib/connectors/dispatch"
+import { deduplicateIcal } from "@/lib/connectors/dedup"
 
 export async function GET(
   _request: Request,
@@ -15,7 +16,7 @@ export async function GET(
 
   let ical: string
   try {
-    ical = await dispatchFetchIcal(connector)
+    ical = deduplicateIcal(await dispatchFetchIcal(connector))
   } catch (err) {
     console.error(`[GET /api/connectors/${id}] Provider error:`, err)
     return new Response(
@@ -27,7 +28,7 @@ export async function GET(
   return new Response(ical, {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Cache-Control": "public, max-age=300",
+      "Cache-Control": "no-cache",
     },
   })
 }
