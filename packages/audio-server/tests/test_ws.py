@@ -34,8 +34,15 @@ def test_ws_receives_wake_event():
 
 def test_ws_no_wake_when_below_threshold():
     """When provider returns False, no wake event is sent."""
+    import threading
     mock_provider = MagicMock()
-    mock_provider.process_chunk.return_value = False
+    processed = threading.Event()
+
+    def _process(audio: bytes) -> bool:
+        processed.set()
+        return False
+
+    mock_provider.process_chunk.side_effect = _process
 
     with patch("claw_audio_server.main.get_wake_word_provider", return_value=mock_provider):
         with TestClient(app) as client:
@@ -43,22 +50,28 @@ def test_ws_no_wake_when_below_threshold():
                 ws.send_text(json.dumps({"type": "audio_config", "sample_rate": 16000}))
                 audio = np.zeros(1280, dtype=np.int16).tobytes()
                 ws.send_bytes(audio)
-                # No message expected — verify process_chunk was called
-                assert mock_provider.process_chunk.called
+                processed.wait(timeout=2.0)
+    assert mock_provider.process_chunk.called
 
 
 def test_ws_audio_config_sets_sample_rate():
     """audio_config command sets the sample rate for this connection."""
+    import threading
     mock_provider = MagicMock()
-    mock_provider.process_chunk.return_value = False
+    processed = threading.Event()
+
+    def _process(audio: bytes) -> bool:
+        processed.set()
+        return False
+
+    mock_provider.process_chunk.side_effect = _process
 
     with patch("claw_audio_server.main.get_wake_word_provider", return_value=mock_provider):
         with TestClient(app) as client:
             with client.websocket_connect("/ws") as ws:
                 ws.send_text(json.dumps({"type": "audio_config", "sample_rate": 48000}))
-                # Send audio at 48kHz — it'll be resampled to 16kHz
-                # 80ms at 48kHz = 3840 samples
+                # Send audio at 48kHz — it'll be resampled to 16kHz (3840 → 1280 samples)
                 audio = np.zeros(3840, dtype=np.int16).tobytes()
                 ws.send_bytes(audio)
-                # process_chunk should have been called with resampled bytes
-                assert mock_provider.process_chunk.called
+                processed.wait(timeout=2.0)
+    assert mock_provider.process_chunk.called
