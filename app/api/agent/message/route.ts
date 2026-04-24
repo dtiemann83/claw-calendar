@@ -21,20 +21,22 @@ export async function POST(req: NextRequest) {
   const openclaw = process.env.OPENCLAW_BIN ?? "openclaw";
 
   try {
-    const { stdout } = await execFileAsync(
+    const { stderr } = await execFileAsync(
       openclaw,
       ["agent", "--agent", agentId, "--local", "--json", "-m", text],
       { timeout: 60_000 }
     );
-    const data = JSON.parse(stdout);
+    const data = JSON.parse(stderr);
     const reply = data?.payloads?.[0]?.text ?? "";
     if (!reply) {
-      console.error("[agent/message] Empty reply from openclaw:", stdout.slice(0, 200));
+      console.error("[agent/message] Empty reply, stderr:", stderr.slice(0, 500));
       return NextResponse.json({ error: "Empty agent reply" }, { status: 502 });
     }
     return NextResponse.json({ text: reply });
-  } catch (err) {
-    console.error("[agent/message] openclaw error:", err);
+  } catch (err: unknown) {
+    const e = err as { stdout?: string; stderr?: string; message?: string };
+    console.error("[agent/message] openclaw error:", e.message);
+    if (e.stderr) console.error("[agent/message] stderr:", e.stderr.slice(0, 500));
     return NextResponse.json({ error: "Agent error" }, { status: 502 });
   }
 }
