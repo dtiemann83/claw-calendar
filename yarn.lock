@@ -236,7 +236,7 @@
     "@pandacss/is-valid-prop" "^1.4.2"
     csstype "^3.2.3"
 
-"@claw/calendar-core@file:/Users/dtiemann/claw-calendar/packages/calendar-core":
+"@claw/calendar-core@file:/Users/dtiemann/.config/superpowers/worktrees/claw-calendar/voice-assistant/packages/calendar-core":
   version "0.1.0"
   resolved "file:packages/calendar-core"
   dependencies:
@@ -245,13 +245,13 @@
     tsdav "^2.1.8"
     zod "^4.3.6"
 
-"@claw/email-core@file:/Users/dtiemann/claw-calendar/packages/email-core":
+"@claw/email-core@file:/Users/dtiemann/.config/superpowers/worktrees/claw-calendar/voice-assistant/packages/email-core":
   version "0.1.0"
   resolved "file:packages/email-core"
   dependencies:
     zod "^4.3.6"
 
-"@claw/kitchen-core@file:/Users/dtiemann/claw-calendar/packages/kitchen-core":
+"@claw/kitchen-core@file:/Users/dtiemann/.config/superpowers/worktrees/claw-calendar/voice-assistant/packages/kitchen-core":
   version "0.1.0"
   resolved "file:packages/kitchen-core"
   dependencies:

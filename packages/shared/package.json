@@ -1,0 +1,6 @@
+{
+  "name": "@claw-calendar/shared",
+  "version": "0.1.0",
+  "main": "src/messages.ts",
+  "types": "src/messages.ts"
+}
