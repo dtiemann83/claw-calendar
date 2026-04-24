@@ -15,7 +15,7 @@ wake-word = ["openwakeword>=0.6"]
 stt-local = ["faster-whisper>=1.0"]
 tts-piper = ["piper-tts>=1.2"]
 speaker-id = ["resemblyzer>=0.1"]
-dev = ["pytest>=8", "pytest-asyncio>=0.23", "httpx>=0.27"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "httpx>=0.27", "anyio[asyncio]>=4.0"]
 
 [build-system]
 requires = ["setuptools>=68"]
