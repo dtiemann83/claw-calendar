@@ -38,4 +38,28 @@ describe("POST /api/voice/transcribe", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ transcript: "hello world" });
   });
+
+  it("passes speaker field from audio server response", async () => {
+    // Mock fetch to return response with speaker
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({ transcript: "hello", speaker: { user_id: "abc", confidence: 0.9 } }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { POST } = await import("./route");
+    const formData = new FormData();
+    formData.append("file", new Blob([new Uint8Array(100)], { type: "audio/webm" }), "audio.webm");
+    const req = new Request("http://localhost/api/voice/transcribe", {
+      method: "POST",
+      body: formData,
+    });
+    const res = await POST(req as any);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.transcript).toBe("hello");
+    expect(body.speaker).toMatchObject({ user_id: "abc", confidence: 0.9 });
+  });
 });

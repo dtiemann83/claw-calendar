@@ -9,6 +9,7 @@ import { WakeWordIndicator } from "./WakeWordIndicator";
 type Message = {
   role: "user" | "assistant";
   text: string;
+  speakerName?: string;
 };
 
 type VoiceState = "idle" | "listening" | "thinking" | "speaking" | "error";
@@ -17,6 +18,8 @@ export function VoiceSession() {
   const [state, setState] = useState<VoiceState>("idle");
   const [messages, setMessages] = useState<Message[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<{ id: string; name: string }[]>([]);
+  const [correctionIdx, setCorrectionIdx] = useState<number | null>(null);
   const [wakeDetected, setWakeDetected] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -31,6 +34,10 @@ export function VoiceSession() {
     return () => {
       mediaRecorderRef.current?.stop();
     };
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/profiles").then(r => r.json()).then(setProfiles).catch(() => {});
   }, []);
 
   const startRecording = useCallback(async () => {
@@ -86,13 +93,24 @@ export function VoiceSession() {
         body: formData,
       });
       if (!transcribeRes.ok) throw new Error("Transcription failed");
-      const { transcript } = await transcribeRes.json();
+      const { transcript, speaker } = await transcribeRes.json();
       if (!transcript?.trim()) {
         setState("idle");
         return;
       }
 
-      setMessages((prev) => [...prev, { role: "user", text: transcript }]);
+      let speakerName: string | undefined;
+      if (speaker?.user_id) {
+        try {
+          const profileRes = await fetch(`/api/profiles/${speaker.user_id}`);
+          if (profileRes.ok) {
+            const profile = await profileRes.json();
+            speakerName = profile.name;
+          }
+        } catch { /* best effort */ }
+      }
+
+      setMessages((prev) => [...prev, { role: "user", text: transcript, speakerName }]);
 
       // Step 2: Ask agent
       const agentRes = await fetch("/api/agent/message", {
@@ -146,6 +164,17 @@ export function VoiceSession() {
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong");
       setState("error");
     }
+  };
+
+  const handleCorrectionClick = (idx: number) => {
+    setCorrectionIdx(idx);
+  };
+
+  const applyCorrection = (idx: number, name: string) => {
+    setMessages((prev) =>
+      prev.map((msg, i) => (i === idx ? { ...msg, speakerName: name } : msg))
+    );
+    setCorrectionIdx(null);
   };
 
   const stateLabels: Record<VoiceState, string> = {
@@ -205,16 +234,55 @@ export function VoiceSession() {
             <div
               key={i}
               className={[
-                "rounded-lg px-4 py-2 text-sm",
+                "rounded-lg px-4 py-2 text-sm relative",
                 msg.role === "user"
                   ? "bg-blue-100 text-blue-900 ml-8"
                   : "bg-gray-100 text-gray-900 mr-8",
               ].join(" ")}
             >
               <span className="font-semibold mr-1">
-                {msg.role === "user" ? "You" : <Volume2 className="inline w-3 h-3 mr-1" />}
+                {msg.role === "user" ? (
+                  msg.speakerName ? `Hey ${msg.speakerName} 👋` : "You"
+                ) : (
+                  <Volume2 className="inline w-3 h-3 mr-1" />
+                )}
               </span>
               {msg.text}
+              {msg.role === "user" && (
+                <div className="text-xs text-gray-400 mt-1">
+                  {msg.speakerName ? (
+                    <span>Hey {msg.speakerName} 👋</span>
+                  ) : (
+                    <span>You</span>
+                  )}
+                  {" · "}
+                  <button
+                    className="underline hover:text-gray-600"
+                    onClick={() => handleCorrectionClick(i)}
+                  >
+                    Not you?
+                  </button>
+                  {correctionIdx === i && (
+                    <div className="absolute z-10 bg-white shadow-lg rounded-lg p-2 mt-1 min-w-32">
+                      {profiles.map((p) => (
+                        <button
+                          key={p.id}
+                          className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 rounded"
+                          onClick={() => applyCorrection(i, p.name)}
+                        >
+                          {p.name}
+                        </button>
+                      ))}
+                      <button
+                        className="block w-full text-left px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 rounded"
+                        onClick={() => setCorrectionIdx(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

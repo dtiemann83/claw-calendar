@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No audio file" }, { status: 400 });
   }
 
-  const audioServerUrl = process.env.AUDIO_SERVER_URL ?? "http://127.0.0.1:8080";
+  const audioServerUrl = process.env.AUDIO_SERVER_URL ?? "http://127.0.0.1:3010";
   const upstream = await fetch(`${audioServerUrl}/stt`, {
     method: "POST",
     body: formData, // forward the whole formData
