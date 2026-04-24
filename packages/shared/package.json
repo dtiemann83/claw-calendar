@@ -1,6 +1,18 @@
 {
-  "name": "@claw-calendar/shared",
+  "name": "@claw/shared",
   "version": "0.1.0",
-  "main": "src/messages.ts",
-  "types": "src/messages.ts"
+  "private": true,
+  "type": "module",
+  "main": "./src/messages.ts",
+  "types": "./src/messages.ts",
+  "exports": {
+    ".": {
+      "types": "./src/messages.ts",
+      "import": "./src/messages.ts",
+      "default": "./src/messages.ts"
+    }
+  },
+  "files": [
+    "src"
+  ]
 }

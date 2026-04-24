@@ -13,4 +13,5 @@ export type WebCommand =
   | { type: "stop_listening" }
   | { type: "synthesize"; text: string; voice?: string }
   | { type: "enroll_start"; userId: string }
-  | { type: "enroll_sample"; userId: string; audioB64: string };
+  | { type: "enroll_sample"; userId: string; audioB64: string }
+  | { type: "enroll_done"; userId: string };

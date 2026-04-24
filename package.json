@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@claw/calendar-core": "*",
+    "@claw/shared": "*",
     "@chakra-ui/react": "^3.34.0",
     "@emotion/react": "^11.14.0",
     "@fontsource-variable/geist": "^5.2.8",
