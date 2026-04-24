@@ -14,9 +14,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@chakra-ui/react": "^3.34.0",
     "@claw/calendar-core": "*",
     "@claw/shared": "*",
-    "@chakra-ui/react": "^3.34.0",
     "@emotion/react": "^11.14.0",
     "@fontsource-variable/geist": "^5.2.8",
     "@fontsource-variable/noto-sans": "^5.2.10",
@@ -40,11 +40,14 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "jsdom": "^29.0.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.4"
