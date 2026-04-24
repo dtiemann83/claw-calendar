@@ -9,15 +9,14 @@ import os
 import numpy as np
 from typing import Callable
 
-from openwakeword.model import Model
-
 
 class OpenWakeWordProvider:
     CHUNK_SAMPLES = 1280  # 80ms at 16kHz
 
     def __init__(self) -> None:
+        from openwakeword.model import Model as _Model  # lazy — allows test mocking via sys.modules
         model_name = os.getenv("WAKE_WORD_MODEL", "hey_jarvis_v0.1")
-        self._model = Model(wakeword_models=[model_name], inference_framework="onnx")
+        self._model = _Model(wakeword_models=[model_name], inference_framework="onnx")
         self._threshold = float(os.getenv("WAKE_WORD_THRESHOLD", "0.5"))
         self._model_name = model_name
         self._on_detected: Callable[[], None] | None = None
@@ -37,6 +36,7 @@ class OpenWakeWordProvider:
             score = scores.get(self._model_name, 0.0)
             if score >= self._threshold:
                 detected = True
+                break  # no need to process remaining buffered chunks
         return detected
 
     async def start(self, on_detected: Callable[[], None]) -> None:

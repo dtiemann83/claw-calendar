@@ -1,8 +1,16 @@
+import sys
 import pytest
 from unittest.mock import patch, MagicMock
 import numpy as np
 
 from claw_audio_server.wake_word.stub import StubWakeWordProvider
+
+
+def _make_oww_mock(model_instance):
+    """Return a sys.modules patch dict that stubs out openwakeword."""
+    oww_model_module = MagicMock()
+    oww_model_module.Model = MagicMock(return_value=model_instance)
+    return {"openwakeword": MagicMock(), "openwakeword.model": oww_model_module}
 
 
 @pytest.mark.asyncio
@@ -24,8 +32,8 @@ def test_open_wake_word_process_chunk_below_threshold():
     mock_model = MagicMock()
     mock_model.predict.return_value = {"hey_jarvis_v0.1": 0.1}
 
-    with patch.dict("os.environ", {"WAKE_WORD_MODEL": "hey_jarvis_v0.1", "WAKE_WORD_THRESHOLD": "0.5"}):
-        with patch("claw_audio_server.wake_word.open_wake_word.Model", return_value=mock_model):
+    with patch.dict("sys.modules", _make_oww_mock(mock_model)):
+        with patch.dict("os.environ", {"WAKE_WORD_MODEL": "hey_jarvis_v0.1", "WAKE_WORD_THRESHOLD": "0.5"}):
             from claw_audio_server.wake_word.open_wake_word import OpenWakeWordProvider
             provider = OpenWakeWordProvider()
             # 1280 samples of silence = one chunk
@@ -38,8 +46,8 @@ def test_open_wake_word_process_chunk_above_threshold():
     mock_model = MagicMock()
     mock_model.predict.return_value = {"hey_jarvis_v0.1": 0.9}
 
-    with patch.dict("os.environ", {"WAKE_WORD_MODEL": "hey_jarvis_v0.1", "WAKE_WORD_THRESHOLD": "0.5"}):
-        with patch("claw_audio_server.wake_word.open_wake_word.Model", return_value=mock_model):
+    with patch.dict("sys.modules", _make_oww_mock(mock_model)):
+        with patch.dict("os.environ", {"WAKE_WORD_MODEL": "hey_jarvis_v0.1", "WAKE_WORD_THRESHOLD": "0.5"}):
             from claw_audio_server.wake_word.open_wake_word import OpenWakeWordProvider
             provider = OpenWakeWordProvider()
             audio = np.zeros(1280, dtype=np.int16).tobytes()
@@ -52,8 +60,8 @@ def test_open_wake_word_accumulates_partial_chunks():
     mock_model = MagicMock()
     mock_model.predict.return_value = {"hey_jarvis_v0.1": 0.0}
 
-    with patch.dict("os.environ", {"WAKE_WORD_MODEL": "hey_jarvis_v0.1"}):
-        with patch("claw_audio_server.wake_word.open_wake_word.Model", return_value=mock_model):
+    with patch.dict("sys.modules", _make_oww_mock(mock_model)):
+        with patch.dict("os.environ", {"WAKE_WORD_MODEL": "hey_jarvis_v0.1"}):
             from claw_audio_server.wake_word.open_wake_word import OpenWakeWordProvider
             provider = OpenWakeWordProvider()
             half = np.zeros(640, dtype=np.int16).tobytes()
