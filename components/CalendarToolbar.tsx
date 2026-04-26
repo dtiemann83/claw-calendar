@@ -11,7 +11,6 @@ interface Props {
   onNext: () => void
   onToday: () => void
   onChangeView: (view: string) => void
-  onOpenSettings: () => void
 }
 
 const VIEW_BUTTONS = [
@@ -29,7 +28,6 @@ export function CalendarToolbar({
   onNext,
   onToday,
   onChangeView,
-  onOpenSettings,
 }: Props) {
   const { calendar: c } = theme
 
@@ -55,10 +53,9 @@ export function CalendarToolbar({
     borderColor: "rgba(255,255,255,0.5)",
   }
 
-  const PrevIcon     = resolveIcon("prev",     theme)
-  const NextIcon     = resolveIcon("next",     theme)
-  const TodayIcon    = resolveIcon("today",    theme)
-  const SettingsIcon = resolveIcon("settings", theme)
+  const PrevIcon  = resolveIcon("prev",  theme)
+  const NextIcon  = resolveIcon("next",  theme)
+  const TodayIcon = resolveIcon("today", theme)
 
   return (
     <div
@@ -73,11 +70,8 @@ export function CalendarToolbar({
         marginBottom: 8,
       }}
     >
-      {/* Left: settings + today */}
+      {/* Left: today */}
       <div style={{ display: "flex", gap: 4 }}>
-        <button style={btnBase} onClick={onOpenSettings} aria-label="Settings">
-          <SettingsIcon size={16} />
-        </button>
         <button style={btnBase} onClick={onToday} aria-label="Today">
           <TodayIcon size={16} />
           <span>Today</span>

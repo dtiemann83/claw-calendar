@@ -20,7 +20,6 @@ import { EventDrawer } from "./EventDrawer"
 interface Props {
   theme: CalendarTheme
   hiddenConnectorIds?: Set<string>
-  onOpenSettings?: () => void
   onConnectorsLoaded?: (connectors: ConnectorMeta[]) => void
   idleResetMs?: number
   tagConfigs: TagConfig[]
@@ -31,7 +30,7 @@ const FADE_MS = 160
 
 type LoadState = "loading" | "ready" | "error"
 
-export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnectorsLoaded, idleResetMs, tagConfigs, onTagConfigsChange }: Props) {
+export function Calendar({ theme, hiddenConnectorIds, onConnectorsLoaded, idleResetMs, tagConfigs, onTagConfigsChange }: Props) {
   const { calendar: c } = theme
   const [connectors, setConnectors] = useState<ConnectorMeta[]>([])
   const [eventSources, setEventSources] = useState<object[]>([])
@@ -402,7 +401,6 @@ export function Calendar({ theme, hiddenConnectorIds, onOpenSettings, onConnecto
         onNext={() => navigate(() => calendarRef.current?.getApi().next())}
         onToday={() => navigate(() => calendarRef.current?.getApi().today())}
         onChangeView={(view) => navigate(() => calendarRef.current?.getApi().changeView(view))}
-        onOpenSettings={onOpenSettings ?? (() => {})}
       />
 
       <div style={{
