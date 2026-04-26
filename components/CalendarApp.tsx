@@ -7,7 +7,10 @@ import type { AllThemeOverrides, ThemeOverrides } from "@/themes/types"
 import type { ConnectorMeta } from "@/lib/connectors/types"
 import type { TagConfig } from "@/lib/events/tags"
 import { ThemeBackground } from "./ThemeBackground"
-import { SettingsModal } from "./SettingsModal"
+import { TabPill } from "./TabPill"
+import type { Tab } from "./TabPill"
+import { SettingsLayout } from "./settings/SettingsLayout"
+import { FloatingVoiceButton } from "./voice/FloatingVoiceButton"
 import { loadAllOverrides, saveAllOverrides, mergeThemeOverrides } from "@/lib/themeOverrides"
 import { fonts } from "@/lib/fonts"
 import type { FontId } from "@/lib/fonts"
@@ -30,8 +33,8 @@ interface Props {
 
 export function CalendarApp({ themes, configuredFont }: Props) {
   const themeNames = Object.keys(themes)
+  const [tab, setTab] = useState<Tab>("calendar")
   const [themeName, setThemeName] = useState(DEFAULT_THEME)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [connectors, setConnectors] = useState<ConnectorMeta[]>([])
   const [hiddenConnectorIds, setHiddenConnectorIds] = useState<Set<string>>(new Set())
   const [cycleIntervalMs, setCycleIntervalMs] = useState<number>(3_600_000)
@@ -39,7 +42,6 @@ export function CalendarApp({ themes, configuredFont }: Props) {
   const [allOverrides, setAllOverrides] = useState<AllThemeOverrides>({})
   const [tagConfigs, setTagConfigs] = useState<TagConfig[]>([])
 
-  // Read saved preferences from localStorage after mount
   useEffect(() => {
     const savedTheme = localStorage.getItem(LS_THEME_KEY)
     if (savedTheme && themes[savedTheme]) setThemeName(savedTheme)
@@ -70,18 +72,11 @@ export function CalendarApp({ themes, configuredFont }: Props) {
     return mergeThemeOverrides(withCycle, allOverrides[themeName] ?? {})
   }, [baseTheme, cycleIntervalMs, allOverrides, themeName])
 
-  // Apply font override to CSS variable whenever it changes
   useEffect(() => {
     if (theme.font && theme.font in fonts) {
-      document.documentElement.style.setProperty(
-        "--font-family",
-        fonts[theme.font as FontId].family
-      )
+      document.documentElement.style.setProperty("--font-family", fonts[theme.font as FontId].family)
     } else if (configuredFont && configuredFont in fonts) {
-      document.documentElement.style.setProperty(
-        "--font-family",
-        fonts[configuredFont as FontId].family
-      )
+      document.documentElement.style.setProperty("--font-family", fonts[configuredFont as FontId].family)
     }
   }, [theme.font, configuredFont])
 
@@ -130,18 +125,8 @@ export function CalendarApp({ themes, configuredFont }: Props) {
     })
   }
 
-  // Persist overrides whenever they change (outside updater to avoid Strict Mode double-fire)
-  useEffect(() => {
-    saveAllOverrides(allOverrides)
-  }, [allOverrides])
-
-  useEffect(() => {
-    localStorage.setItem(LS_TAGS_KEY, JSON.stringify(tagConfigs))
-  }, [tagConfigs])
-
-  const handleTagConfigsChange = (configs: TagConfig[]) => {
-    setTagConfigs(configs)
-  }
+  useEffect(() => { saveAllOverrides(allOverrides) }, [allOverrides])
+  useEffect(() => { localStorage.setItem(LS_TAGS_KEY, JSON.stringify(tagConfigs)) }, [tagConfigs])
 
   const handleToggleConnector = (id: string) => {
     setHiddenConnectorIds((prev) => {
@@ -155,35 +140,42 @@ export function CalendarApp({ themes, configuredFont }: Props) {
   return (
     <main style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
       <ThemeBackground theme={theme} />
-      <Calendar
-        theme={theme}
-        hiddenConnectorIds={hiddenConnectorIds}
-        onOpenSettings={() => setSettingsOpen(true)}
-        onConnectorsLoaded={setConnectors}
-        idleResetMs={idleResetMs}
-        tagConfigs={tagConfigs}
-        onTagConfigsChange={handleTagConfigsChange}
-      />
-      <SettingsModal
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        theme={theme}
-        themes={themes}
-        currentThemeName={themeName}
-        onThemeChange={handleThemeChange}
-        connectors={connectors}
-        hiddenConnectorIds={hiddenConnectorIds}
-        onToggleConnector={handleToggleConnector}
-        cycleIntervalMs={cycleIntervalMs}
-        onCycleIntervalChange={handleCycleIntervalChange}
-        idleResetMs={idleResetMs}
-        onIdleResetChange={handleIdleResetChange}
-        themeOverrides={allOverrides[themeName] ?? {}}
-        onOverrideChange={handleOverrideChange}
-        onResetOverrides={handleResetOverrides}
-        tagConfigs={tagConfigs}
-        onTagConfigsChange={handleTagConfigsChange}
-      />
+      <TabPill tab={tab} onChange={setTab} />
+
+      {/* Calendar is always mounted (hidden on settings tab) so connectors load regardless of active tab */}
+      <div style={{ display: tab === "calendar" ? "block" : "none" }}>
+        <Calendar
+          theme={theme}
+          hiddenConnectorIds={hiddenConnectorIds}
+          onConnectorsLoaded={setConnectors}
+          idleResetMs={idleResetMs}
+          tagConfigs={tagConfigs}
+          onTagConfigsChange={setTagConfigs}
+        />
+      </div>
+
+      {tab === "settings" && (
+        <SettingsLayout
+          theme={theme}
+          themes={themes}
+          currentThemeName={themeName}
+          onThemeChange={handleThemeChange}
+          themeOverrides={allOverrides[themeName] ?? {}}
+          onOverrideChange={handleOverrideChange}
+          onResetOverrides={handleResetOverrides}
+          cycleIntervalMs={cycleIntervalMs}
+          onCycleIntervalChange={handleCycleIntervalChange}
+          idleResetMs={idleResetMs}
+          onIdleResetChange={handleIdleResetChange}
+          tagConfigs={tagConfigs}
+          onTagConfigsChange={setTagConfigs}
+          connectors={connectors}
+          hiddenConnectorIds={hiddenConnectorIds}
+          onToggleConnector={handleToggleConnector}
+        />
+      )}
+
+      <FloatingVoiceButton />
     </main>
   )
 }
