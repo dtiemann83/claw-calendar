@@ -81,3 +81,49 @@ describe("DELETE /api/profiles/[id]", () => {
     expect(getRes.status).toBe(404);
   });
 });
+
+describe("PATCH /api/profiles/[id]", () => {
+  it("updates name and color", async () => {
+    const { POST } = await import("../route");
+    const createReq = new Request("http://localhost/api/profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Bob", color: "#ef4444" }),
+    });
+    const { id } = await (await POST(createReq as any)).json();
+
+    const { PATCH } = await import("./route");
+    const req = new Request(`http://localhost/api/profiles/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Bobby", color: "#3b82f6" }),
+    });
+    const res = await PATCH(req as any, { params: Promise.resolve({ id }) });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.name).toBe("Bobby");
+    expect(body.color).toBe("#3b82f6");
+  });
+
+  it("returns 404 for unknown id", async () => {
+    const { PATCH } = await import("./route");
+    const req = new Request("http://localhost/api/profiles/nope", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Ghost" }),
+    });
+    const res = await PATCH(req as any, { params: Promise.resolve({ id: "nope" }) });
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 400 when body has nothing to update", async () => {
+    const { PATCH } = await import("./route");
+    const req = new Request("http://localhost/api/profiles/any", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const res = await PATCH(req as any, { params: Promise.resolve({ id: "any" }) });
+    expect(res.status).toBe(400);
+  });
+});
