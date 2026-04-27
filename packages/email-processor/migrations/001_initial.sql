@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS emails (
 
 CREATE OR REPLACE FUNCTION notify_email_change() RETURNS trigger AS $$
 BEGIN
-  PERFORM pg_notify('email_pipeline', row_to_json(NEW)::text);
+  PERFORM pg_notify('email_pipeline',
+    json_build_object('id', NEW.id, 'status', NEW.status)::text);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -46,3 +47,6 @@ DROP TRIGGER IF EXISTS email_pipeline_trigger ON emails;
 CREATE TRIGGER email_pipeline_trigger
 AFTER INSERT OR UPDATE ON emails
 FOR EACH ROW EXECUTE FUNCTION notify_email_change();
+
+CREATE INDEX IF NOT EXISTS emails_status_idx ON emails (status);
+CREATE INDEX IF NOT EXISTS emails_received_at_idx ON emails (received_at);
