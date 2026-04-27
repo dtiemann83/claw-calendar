@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from email_processor.models import Event
 from email_processor.extractor import extract_event
 
@@ -49,7 +49,7 @@ async def test_extract_event_from_school_email():
         "description": "Music Field Trip to the Raleigh Amphitheater",
     }
     with patch("email_processor.extractor.anthropic_client") as mock_client:
-        mock_client.messages.create.return_value = make_mock_response(tool_input)
+        mock_client.messages.create = AsyncMock(return_value=make_mock_response(tool_input))
         event = await extract_event(SCHOOL_EMAIL, "school")
     assert event is not None
     assert event.title == "Music Field Trip"
@@ -60,6 +60,6 @@ async def test_extract_event_from_school_email():
 @pytest.mark.asyncio
 async def test_extract_event_returns_none_for_promo():
     with patch("email_processor.extractor.anthropic_client") as mock_client:
-        mock_client.messages.create.return_value = make_mock_response(None)
+        mock_client.messages.create = AsyncMock(return_value=make_mock_response(None))
         event = await extract_event(PROMO_EMAIL, "general")
     assert event is None

@@ -1,7 +1,7 @@
 import anthropic
 from .models import Event
 
-anthropic_client = anthropic.Anthropic()
+anthropic_client = anthropic.AsyncAnthropic()
 
 _RECORD_EVENT_TOOL = {
     "name": "record_event",
@@ -30,7 +30,7 @@ _SYSTEM = (
 )
 
 async def extract_event(content: str, tag: str) -> Event | None:
-    response = anthropic_client.messages.create(
+    response = await anthropic_client.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=512,
         system=_SYSTEM,
