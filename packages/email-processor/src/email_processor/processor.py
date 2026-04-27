@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -21,6 +22,8 @@ def run_claw_cal_list(grep: str, from_date: str) -> str:
         ["claw-cal", "list", "--from", from_date, "--to", from_date, "--grep", grep],
         capture_output=True, text=True, timeout=30
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"claw-cal list failed: {result.stderr}")
     return result.stdout
 
 
@@ -59,6 +62,37 @@ def notify_zoidberg(email_id: str, to_addr: str, from_addr: str, subject: str) -
     )
 
 
+def _alert_dead_letter(email_id: str, to_addr: str, subject: str, error: str) -> None:
+    msg = (
+        f"Email processing failed {MAX_RETRIES} times — needs manual review.\n"
+        f"To: {to_addr}\nSubject: {subject}\n"
+        f"Last error: {error}\nEmail ID: {email_id}"
+    )
+    subprocess.run(
+        [OPENCLAW_BIN, "agent", "-m", msg, "--agent", OPENCLAW_AGENT],
+        capture_output=True, timeout=30
+    )
+
+
+async def _handle_failure(
+    conn: asyncpg.Connection,
+    email_id: str,
+    retry_count: int,
+    to_addr: str,
+    subject: str,
+    exc: Exception,
+) -> None:
+    new_retry = retry_count + 1
+    new_status = "dead_letter" if new_retry >= MAX_RETRIES else "parse_failed"
+    await conn.execute(
+        "UPDATE emails SET status=$1, retry_count=$2, last_error=$3 WHERE id=$4",
+        new_status, new_retry, str(exc), email_id
+    )
+    if new_status == "dead_letter":
+        loop = asyncio.get_event_loop()
+        loop.run_in_executor(None, _alert_dead_letter, str(email_id), to_addr, subject, str(exc))
+
+
 async def process_email(conn: asyncpg.Connection, email_id: str) -> None:
     row = await conn.fetchrow(
         "SELECT id, email_id, from_addr, to_addr, subject, full_content, status, retry_count "
@@ -86,10 +120,10 @@ async def process_email(conn: asyncpg.Connection, email_id: str) -> None:
         await conn.execute(
             "UPDATE emails SET status='routing_unknown' WHERE id=$1", email_id
         )
-        notify_zoidberg(
+        loop = asyncio.get_event_loop()
+        loop.run_in_executor(None, notify_zoidberg,
             str(email_id), to_addr,
-            row["from_addr"] or "", row["subject"] or ""
-        )
+            row["from_addr"] or "", row["subject"] or "")
         logger.info(json.dumps({"status": "routing_unknown", "to": to_addr,
                                 "email_id": str(email_id)}))
         return
@@ -111,14 +145,7 @@ async def process_email(conn: asyncpg.Connection, email_id: str) -> None:
     try:
         event = await extract_event(content, tag)
     except Exception as exc:
-        retry_count = row["retry_count"] + 1
-        new_status = "dead_letter" if retry_count >= MAX_RETRIES else "parse_failed"
-        await conn.execute(
-            "UPDATE emails SET status=$1, retry_count=$2, last_error=$3 WHERE id=$4",
-            new_status, retry_count, str(exc), email_id
-        )
-        if new_status == "dead_letter":
-            _alert_dead_letter(str(email_id), to_addr, row["subject"] or "", str(exc))
+        await _handle_failure(conn, email_id, row["retry_count"], to_addr, row["subject"] or "", exc)
         return
 
     if event is None:
@@ -162,14 +189,7 @@ async def process_email(conn: asyncpg.Connection, email_id: str) -> None:
             event.location, desc
         )
     except Exception as exc:
-        retry_count = row["retry_count"] + 1
-        new_status = "dead_letter" if retry_count >= MAX_RETRIES else "parse_failed"
-        await conn.execute(
-            "UPDATE emails SET status=$1, retry_count=$2, last_error=$3 WHERE id=$4",
-            new_status, retry_count, str(exc), email_id
-        )
-        if new_status == "dead_letter":
-            _alert_dead_letter(str(email_id), to_addr, row["subject"] or "", str(exc))
+        await _handle_failure(conn, email_id, row["retry_count"], to_addr, row["subject"] or "", exc)
         return
 
     duration_ms = int((time.time() - start_ts) * 1000)
@@ -181,15 +201,3 @@ async def process_email(conn: asyncpg.Connection, email_id: str) -> None:
         "status": "added", "to": to_addr, "event": event.title,
         "uid": uid, "duration_ms": duration_ms, "email_id": str(email_id)
     }))
-
-
-def _alert_dead_letter(email_id: str, to_addr: str, subject: str, error: str) -> None:
-    msg = (
-        f"Email processing failed {MAX_RETRIES} times — needs manual review.\n"
-        f"To: {to_addr}\nSubject: {subject}\n"
-        f"Last error: {error}\nEmail ID: {email_id}"
-    )
-    subprocess.run(
-        [OPENCLAW_BIN, "agent", "-m", msg, "--agent", OPENCLAW_AGENT],
-        capture_output=True, timeout=30
-    )

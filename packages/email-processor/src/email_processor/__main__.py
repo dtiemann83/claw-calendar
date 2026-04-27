@@ -7,7 +7,7 @@ import signal
 import asyncpg
 
 from .db import get_pool
-from .processor import process_email
+from .processor import MAX_RETRIES, process_email
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,7 +30,7 @@ def make_listener(pool: asyncpg.Pool):
             email_id = data.get("id")
             status = data.get("status")
             if status == "pending" and email_id:
-                asyncio.ensure_future(_process_with_pool(pool, email_id))
+                asyncio.get_event_loop().create_task(_process_with_pool(pool, email_id))
         except Exception as exc:
             logger.error(json.dumps({"error": str(exc), "payload": payload[:200]}))
     return handler
@@ -50,7 +50,7 @@ async def retry_loop(pool: asyncpg.Pool) -> None:
         try:
             async with pool.acquire() as conn:
                 rows = await conn.fetch(
-                    "SELECT id FROM emails WHERE status='parse_failed' AND retry_count < 3 "
+                    f"SELECT id FROM emails WHERE status='parse_failed' AND retry_count < {MAX_RETRIES} "
                     "ORDER BY received_at ASC"
                 )
                 for row in rows:
