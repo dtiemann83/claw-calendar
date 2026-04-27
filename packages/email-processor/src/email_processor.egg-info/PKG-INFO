@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: email-processor
+Version: 0.1.0
+Requires-Python: >=3.13
+Requires-Dist: asyncpg>=0.30
+Requires-Dist: anthropic>=0.40
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.23; extra == "dev"
