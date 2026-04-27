@@ -1,9 +1,0 @@
-pyproject.toml
-src/email_processor/__init__.py
-src/email_processor/db.py
-src/email_processor.egg-info/PKG-INFO
-src/email_processor.egg-info/SOURCES.txt
-src/email_processor.egg-info/dependency_links.txt
-src/email_processor.egg-info/requires.txt
-src/email_processor.egg-info/top_level.txt
-tests/test_db.py
