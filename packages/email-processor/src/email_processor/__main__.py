@@ -30,7 +30,7 @@ def make_listener(pool: asyncpg.Pool):
             email_id = data.get("id")
             status = data.get("status")
             if status == "pending" and email_id:
-                asyncio.get_event_loop().create_task(_process_with_pool(pool, email_id))
+                asyncio.get_running_loop().create_task(_process_with_pool(pool, email_id))
         except Exception as exc:
             logger.error(json.dumps({"error": str(exc), "payload": payload[:200]}))
     return handler
@@ -69,7 +69,7 @@ async def main() -> None:
 
     logger.info(json.dumps({"event": "started", "dsn": DSN.split("@")[-1]}))
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     stop = asyncio.Event()
     loop.add_signal_handler(signal.SIGTERM, stop.set)
     loop.add_signal_handler(signal.SIGINT, stop.set)

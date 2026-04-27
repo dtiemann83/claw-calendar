@@ -77,19 +77,21 @@ def _alert_dead_letter(email_id: str, to_addr: str, subject: str, error: str) ->
 async def _handle_failure(
     conn: asyncpg.Connection,
     email_id: str,
-    retry_count: int,
     to_addr: str,
     subject: str,
     exc: Exception,
 ) -> None:
-    new_retry = retry_count + 1
-    new_status = "dead_letter" if new_retry >= MAX_RETRIES else "parse_failed"
-    await conn.execute(
-        "UPDATE emails SET status=$1, retry_count=$2, last_error=$3 WHERE id=$4",
-        new_status, new_retry, str(exc), email_id
+    row = await conn.fetchrow(
+        """UPDATE emails
+           SET retry_count = retry_count + 1,
+               status = CASE WHEN retry_count + 1 >= $1 THEN 'dead_letter' ELSE 'parse_failed' END,
+               last_error = $2
+           WHERE id = $3
+           RETURNING retry_count, status""",
+        MAX_RETRIES, str(exc), email_id
     )
-    if new_status == "dead_letter":
-        loop = asyncio.get_event_loop()
+    if row and row["status"] == "dead_letter":
+        loop = asyncio.get_running_loop()
         loop.run_in_executor(None, _alert_dead_letter, str(email_id), to_addr, subject, str(exc))
 
 
@@ -120,7 +122,7 @@ async def process_email(conn: asyncpg.Connection, email_id: str) -> None:
         await conn.execute(
             "UPDATE emails SET status='routing_unknown' WHERE id=$1", email_id
         )
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         loop.run_in_executor(None, notify_zoidberg,
             str(email_id), to_addr,
             row["from_addr"] or "", row["subject"] or "")
@@ -145,7 +147,7 @@ async def process_email(conn: asyncpg.Connection, email_id: str) -> None:
     try:
         event = await extract_event(content, tag)
     except Exception as exc:
-        await _handle_failure(conn, email_id, row["retry_count"], to_addr, row["subject"] or "", exc)
+        await _handle_failure(conn, email_id, to_addr, row["subject"] or "", exc)
         return
 
     if event is None:
@@ -189,7 +191,7 @@ async def process_email(conn: asyncpg.Connection, email_id: str) -> None:
             event.location, desc
         )
     except Exception as exc:
-        await _handle_failure(conn, email_id, row["retry_count"], to_addr, row["subject"] or "", exc)
+        await _handle_failure(conn, email_id, to_addr, row["subject"] or "", exc)
         return
 
     duration_ms = int((time.time() - start_ts) * 1000)

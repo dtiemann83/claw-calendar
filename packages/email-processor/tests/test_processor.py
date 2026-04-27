@@ -29,6 +29,7 @@ async def seed_routing(conn):
 
 @pytest.fixture
 async def test_email(conn):
+    await conn.execute("DELETE FROM emails WHERE email_id = 'proc-test-001'")
     row = await conn.fetchrow(
         """INSERT INTO emails (email_id, from_addr, to_addr, subject, full_content, status)
            VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id""",
@@ -61,11 +62,15 @@ async def test_process_email_adds_event(conn, test_email):
 
 @pytest.mark.asyncio
 async def test_process_email_unknown_address(conn):
+    # Use an address that definitely has no routing rule (clean up any stale rule first).
+    test_to = "unknown-test-addr@tiemannfamily.us"
+    await conn.execute("DELETE FROM routing_rules WHERE address = $1", test_to)
+    await conn.execute("DELETE FROM emails WHERE email_id = 'proc-test-002'")
     row = await conn.fetchrow(
         """INSERT INTO emails (email_id, from_addr, to_addr, subject, full_content, status)
            VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id""",
         "proc-test-002", "sender@example.com",
-        "travel@tiemannfamily.us", "Flight info", "Flight on May 1."
+        test_to, "Flight info", "Flight on May 1."
     )
     email_id = str(row["id"])
     with patch("email_processor.processor.notify_zoidberg") as mock_notify:
